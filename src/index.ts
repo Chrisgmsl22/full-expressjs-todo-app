@@ -7,12 +7,9 @@ app.use(express.json());
 
 // Defining a Get method
 app.get("/", (_req, res) => {
-  res.send("Welcome to my Express API using TSs");
+    res.send("Welcome to my Express API using TS YAY1");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// Comment
-console.log("This is a test");
