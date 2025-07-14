@@ -15,3 +15,4 @@ app.listen(PORT, () => {
 });
 
 // Comment
+console.log("This is a test");
