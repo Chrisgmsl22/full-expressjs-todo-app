@@ -1,0 +1,27 @@
+{
+    "name": "backend-todo-app",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon dist/index.js",
+        "build": "tsc",
+        "watch": "tsc --watch",
+        "start": "node dist/index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "express": "^5.1.0",
+        "mongoose": "^8.16.2"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.3",
+        "@types/node": "^24.0.10",
+        "nodemon": "^3.1.10",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.8.3"
+    }
+}
