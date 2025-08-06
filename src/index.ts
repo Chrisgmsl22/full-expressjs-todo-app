@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Defining a Get method
 app.get("/", (_req, res) => {
-    res.send("Welcome to my Express API using TS YAY1");
+    res.send("Welcome to my Express API using TS YAY2");
 });
 
 app.listen(PORT, () => {
