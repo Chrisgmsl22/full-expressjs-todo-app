@@ -109,4 +109,36 @@ export class PostController {
             next(error);
         }
     }
+
+    public static async updatePost(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const { id } = req.params;
+            const requestBody = req.body;
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({
+                    message: "Invalid ID format",
+                });
+                return;
+            }
+
+            const post = await Task.findByIdAndUpdate(id, requestBody, {
+                new: true,
+                runValidators: true,
+            });
+
+            if (!post) {
+                res.status(404).json({ message: "Post was not found" });
+                return;
+            }
+
+            res.status(200).json(post);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

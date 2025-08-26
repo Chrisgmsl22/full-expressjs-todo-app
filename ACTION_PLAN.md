@@ -9,72 +9,72 @@
 
 ## Current Status
 
-**Current Phase**: Phase 2 - Persistence with MongoDB
-**Last Updated**: [Current Date]
+**Current Phase**: Phase 2 - Persistence with MongoDB ✅ COMPLETED
+**Last Updated**: August 2025
 **Project**: Full ExpressJS Todo App
 
 ## Phase Breakdown
 
 ### Phase 1: Foundation (Days 1–7) ✅ COMPLETED
 
-- Set up project structure (controllers, models, routes, services)
-- Understand routing and route handlers
-- Implement controllers using class-based OOP style
-- Define TypeScript interfaces for Post model and API types
-- Add endpoints: GET /posts, GET /posts/:id, POST /posts
-- Add error handling and logging (e.g., with Morgan)
+-   Set up project structure (controllers, models, routes, services)
+-   Understand routing and route handlers
+-   Implement controllers using class-based OOP style
+-   Define TypeScript interfaces for Post model and API types
+-   Add endpoints: GET /posts, GET /posts/:id, POST /posts
+-   Add error handling and logging (e.g., with Morgan)
 
 **What was learned**: Basic Express.js structure, TypeScript interfaces, routing concepts, controller patterns
 
-### Phase 2: Persistence with MongoDB (Week 2) 🔄 IN PROGRESS
+### Phase 2: Persistence with MongoDB (Week 2) ✅ COMPLETED
 
-- Connect to MongoDB using Mongoose
-- Create schemas and models
-- Refactor controllers to use database
-- Add PUT and DELETE endpoints
-- Store DB credentials in .env
+-   ✅ Connect to MongoDB using Mongoose
+-   ✅ Create schemas and models
+-   ✅ Refactor controllers to use database
+-   ✅ Add PUT and DELETE endpoints
+-   ✅ Store DB credentials in .env
 
-**Current Focus**: Setting up MongoDB connection and creating proper schemas
-**Next Steps**: [To be updated as we progress]
+**What was learned**: MongoDB connection, Mongoose schemas, CRUD operations, database validation
+**Next Phase**: Authentication & Security
 
 ### Phase 3: Auth and Security (Weeks 3–4)
 
-- Create user model and auth routes
-- Implement JWT login and register
-- Hash passwords with bcrypt
-- Protect routes using middleware
-- Add role-based access control (optional)
+-   Create user model and auth routes
+-   Implement JWT login and register
+-   Hash passwords with bcrypt
+-   Protect routes using middleware
+-   Add role-based access control (optional)
 
 ### Phase 4: Dockerize the App (Weeks 4–5)
 
-- Write Dockerfile and docker-compose.yml
-- Containerize MongoDB and the app
-- Use .env.docker for environment config
-- Test container setup locally
+-   Write Dockerfile and docker-compose.yml
+-   Containerize MongoDB and the app
+-   Use .env.docker for environment config
+-   Test container setup locally
 
 ### Phase 5: Deployment + Remote DB (Week 6–7)
 
-- Connect to MongoDB Atlas (remote)
-- Deploy using Render, Railway, or AWS
-- Manage secrets and environment vars
-- Set up CI/CD with GitHub Actions
+-   Connect to MongoDB Atlas (remote)
+-   Deploy using Render, Railway, or AWS
+-   Manage secrets and environment vars
+-   Set up CI/CD with GitHub Actions
 
 ### Phase 6: Advanced Topics (Week 8+)
 
-- Add unit and integration testing (Jest, Supertest)
-- Implement Redis caching
-- Add pagination, filtering, search
-- Upload files (e.g., to S3 or Cloudinary)
-- Explore microservices and WebSockets
+-   Add unit and integration testing (Jest, Supertest)
+-   Implement Redis caching
+-   Add pagination, filtering, search
+-   Upload files (e.g., to S3 or Cloudinary)
+-   Explore microservices and WebSockets
 
 ## Weekly Breakdown
 
-- **Week 1**: Express + TypeScript basics — Working routes, controllers, errors ✅
-- **Week 2**: MongoDB + Mongoose — CRUD with database 🔄
-- **Weeks 3–4**: Auth & middleware — Login/register + JWT
-- **Weeks 4–5**: Docker — Fully containerized app
-- **Week 6**: Deployment — Live version of app online
-- **Week 7+**: Advanced features — Production-ready features
+-   **Week 1**: Express + TypeScript basics — Working routes, controllers, errors ✅
+-   **Week 2**: MongoDB + Mongoose — CRUD with database 🔄
+-   **Weeks 3–4**: Auth & middleware — Login/register + JWT
+-   **Weeks 4–5**: Docker — Fully containerized app
+-   **Week 6**: Deployment — Live version of app online
+-   **Week 7+**: Advanced features — Production-ready features
 
 ## Learning Approach & Guidelines
 
@@ -83,6 +83,34 @@
 3. **Progressive Complexity**: Build up gradually as concepts become clear
 4. **Question-Driven**: Ask questions to deepen understanding
 5. **Mistake Learning**: Embrace errors as learning opportunities
+
+## AI Interaction Guidelines ⚠️ IMPORTANT
+
+**CRITICAL RULE**: This is YOUR learning project - you do the coding!
+
+**What AI Should Do:**
+
+-   ✅ Explain concepts and provide guidance
+-   ✅ Show suggestions in the sidebar (code examples)
+-   ✅ Help debug issues and explain errors
+-   ✅ Answer questions about best practices
+-   ✅ Point out potential improvements
+
+**What AI Should NOT Do:**
+
+-   ❌ Write or modify code files directly
+-   ❌ Use edit_file, search_replace, or similar tools
+-   ❌ Make changes to your codebase
+-   ❌ Solve problems for you
+
+**Your Role:**
+
+-   🎯 Implement all code changes yourself
+-   🎯 Use AI suggestions as learning material
+-   🎯 Ask questions when you need clarification
+-   🎯 Experiment and learn from mistakes
+
+**Remember**: The goal is for YOU to learn backend development, not for AI to build the app!
 
 ## Current Session Notes
 
@@ -105,11 +133,11 @@ src/
 
 ## Tools & Technologies
 
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript
-- **Database**: MongoDB with Mongoose
-- **Testing**: [To be added]
-- **Deployment**: [To be added]
+-   **Runtime**: Node.js with Express.js
+-   **Language**: TypeScript
+-   **Database**: MongoDB with Mongoose
+-   **Testing**: [To be added]
+-   **Deployment**: [To be added]
 
 ## Notes & Commands
 

@@ -20,4 +20,6 @@ taskRoutes.post("/posts", PostController.createPost);
 // DELETE a post
 taskRoutes.delete("/posts/:id", PostController.deletePost);
 
+taskRoutes.put("/posts/:id", PostController.updatePost);
+
 export default taskRoutes;
