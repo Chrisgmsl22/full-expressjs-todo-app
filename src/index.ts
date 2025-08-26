@@ -4,6 +4,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import dotenv from "dotenv";
 import mongoose, { ConnectOptions } from "mongoose";
 import { Task } from "./models/task.model";
+import { checkDatabaseConnection } from "./middleware/checkDatabaseConnection";
 
 dotenv.config({ path: ".env" });
 const app = express();
@@ -45,14 +46,9 @@ connectDB();
 app.use(express.json()); // express.json is a middleware
 
 // Mount the routes under /api
-app.use("/api", taskRoutes);
+app.use("/api", checkDatabaseConnection, taskRoutes);
 
 app.use(errorHandler);
-
-// Defining a Get method
-app.get("/", (_req, res) => {
-    res.send("Welcome to my Express API using TS YAY2");
-});
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

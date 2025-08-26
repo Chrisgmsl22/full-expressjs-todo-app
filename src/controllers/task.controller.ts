@@ -1,9 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { IPostTask } from "../models/interfaces";
-import { generateStaticPosts } from "../utils";
 import mongoose from "mongoose";
-
-const STATIC_POSTS: IPostTask[] = generateStaticPosts();
+import { Task } from "../models/task.model";
 
 export class PostController {
     public static async getAllPosts(
@@ -12,7 +9,9 @@ export class PostController {
         next: NextFunction
     ): Promise<void> {
         try {
-            res.status(200).json(STATIC_POSTS);
+            // use Mongoose to find all tasks
+            const tasks = await Task.find();
+            res.status(200).json(tasks);
         } catch (err) {
             next(err);
         }
@@ -25,7 +24,14 @@ export class PostController {
     ): Promise<void> {
         try {
             const { id } = req.params;
-            const post = STATIC_POSTS.find((p) => p._id === id);
+            // Check if the ID is valid in the first place
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({
+                    message: "Invalid ID format",
+                });
+                return;
+            }
+            const post = await Task.findById(id);
 
             if (!post) {
                 res.status(404).json({ message: "Post was not found" });
@@ -60,16 +66,17 @@ export class PostController {
                     message: "Completed must be boolean",
                 };
                 res.status(400).json(errMessage);
+                return;
             }
-            const newPost: IPostTask = {
-                _id: new mongoose.Types.ObjectId().toString(),
-                title: title,
+            const newTask = new Task({
+                title: title.trim(),
                 completed: completed || false,
-                createdAt: new Date(),
-            };
+                // createdAt: new Date(), Will be set automatically by the schema
+            });
 
-            STATIC_POSTS.push(newPost);
-            res.status(201).json(newPost);
+            // Save to the DB
+            const savedTask = await newTask.save();
+            res.status(201).json(savedTask);
         } catch (err) {
             next(err);
         }
@@ -82,14 +89,21 @@ export class PostController {
     ): Promise<void> {
         try {
             const { id } = req.params;
-            const postIndex = STATIC_POSTS.findIndex((p) => p._id === id);
 
-            if (postIndex === -1) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                res.status(400).json({
+                    message: "Invalid ID format",
+                });
+                return;
+            }
+
+            const post = await Task.findByIdAndDelete(id);
+
+            if (!post) {
                 res.status(404).json({ message: "Post was not found" });
                 return;
             }
 
-            STATIC_POSTS.splice(postIndex, 1);
             res.status(204).send();
         } catch (error) {
             next(error);
