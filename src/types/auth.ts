@@ -22,6 +22,19 @@ export interface IRegisterRequest {
 }
 
 export interface IAuthResponse {
-    user: Omit<IUser, "password">;
-    token: string;
+    success: boolean;
+    message: string;
+    user?: {
+        id: string;
+        username: string;
+        email: string;
+        createdAt: Date;
+    };
+    token?: string;
+}
+
+export interface IAuthError {
+    success: false; // Discriminated union (literal type)
+    message: string;
+    error: string;
 }

@@ -1,6 +1,7 @@
 // Business logic, hashing, validation, etc
 
-import { IUser } from "../types";
+import { IRegisterRequest, IUser } from "../types";
+import bcrypt from "bcrypt";
 
 /**
  *
@@ -11,23 +12,40 @@ import { IUser } from "../types";
  *  5. Create a new user
  */
 
-export const hashPassword = async (_password: string): Promise<string> => {
-    return "";
+export const hashPassword = async (password: string): Promise<string> => {
+    const saltRounds: number = 12;
+    return await bcrypt.hash(password, saltRounds);
 };
 
 export const comparePassword = async (
-    _password: string,
-    _hash: string
+    givenPassword: string,
+    hash: string
 ): Promise<boolean> => {
-    return false;
+    return await bcrypt.compare(givenPassword, hash);
 };
 
-export const validateEmail = async (_email: string): Promise<boolean> => {
-    return false;
+export const validateEmail = async (email: string): Promise<boolean> => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 };
 
-export const createUser = async (_userData: string): Promise<IUser | null> => {
-    return null;
+export const createUser = async (
+    userData: IRegisterRequest
+): Promise<IUser> => {
+    // Hash the password
+    const hashedPassword = await hashPassword(userData.password);
+
+    // Create user object (in real app, this would save to database)
+    const newUser: IUser = {
+        username: userData.username,
+        email: userData.email,
+        password: hashedPassword,
+        createdAt: new Date(),
+        isActive: true,
+        emailVerified: false,
+    };
+
+    return newUser;
 };
 
 export const findUserByEmail = async (
