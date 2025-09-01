@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { IUserTask } from "./interfaces/UserTask";
+import { IUser } from "../types";
 
-const userSchema: Schema<IUserTask> = new Schema({
+const userSchema: Schema<IUser> = new Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -11,4 +11,4 @@ const userSchema: Schema<IUserTask> = new Schema({
     emailVerified: { type: Boolean, default: false },
 });
 
-export const UserModel = mongoose.model<IUserTask>("User", userSchema);
+export const UserModel = mongoose.model<IUser>("User", userSchema);

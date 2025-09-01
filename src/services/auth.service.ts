@@ -1,6 +1,6 @@
 // Business logic, hashing, validation, etc
 
-import { IUserTask } from "../models/interfaces/UserTask";
+import { IUser } from "../types";
 
 /**
  *
@@ -26,15 +26,12 @@ export const validateEmail = async (_email: string): Promise<boolean> => {
     return false;
 };
 
-//todo: Add RegisterData interface
-export const createUser = async (
-    _userData: string
-): Promise<IUserTask | null> => {
+export const createUser = async (_userData: string): Promise<IUser | null> => {
     return null;
 };
 
 export const findUserByEmail = async (
     _email: string
-): Promise<IUserTask | null> => {
+): Promise<IUser | null> => {
     return null;
 };

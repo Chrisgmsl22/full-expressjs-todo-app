@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { IPostTask } from "../models/interfaces";
+import { ITask } from "../types";
 
-export const generateStaticPosts = (): IPostTask[] => {
-    const hardCodedPosts: IPostTask[] = [
+export const generateStaticPosts = (): ITask[] => {
+    const hardCodedPosts: ITask[] = [
         {
             _id: new mongoose.Types.ObjectId().toString(),
             title: "Learn Express with TypeScript",
