@@ -1,88 +1,126 @@
 import { NextFunction, Request, Response } from "express";
-import mongoose from "mongoose";
-import { Task } from "../models/task.model";
+import { IApiResponse } from "../types";
+import { TaskService } from "../services/task.service";
 
-export class PostController {
-    public static async getAllPosts(
+export class TaskController {
+    public static async getAllTasks(
         _req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
-            // use Mongoose to find all tasks
-            const tasks = await Task.find();
-            res.status(200).json(tasks);
+            // 1. Call service to get all tasks
+            const tasks = await TaskService.getAllTasks();
+
+            // 2. Return formatted response
+            res.status(200).json({
+                success: true,
+                data: tasks,
+                message: "Tasks retrieved successfully",
+            } as IApiResponse);
         } catch (err) {
             next(err);
         }
     }
 
-    public static async getPostById(
+    public static async getTaskById(
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
             const { id } = req.params;
-            // Check if the ID is valid in the first place
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({
-                    message: "Invalid ID format",
-                });
+
+            // 1. Call service to get task
+            const task = await TaskService.getTaskById(id);
+
+            // 2. Handle not found case
+            if (!task) {
+                res.status(404).json({
+                    success: false,
+                    error: "Task not found",
+                } as IApiResponse);
                 return;
             }
-            const post = await Task.findById(id);
 
-            if (!post) {
-                res.status(404).json({ message: "Post was not found" });
-                return;
-            }
-
-            res.status(200).json(post);
+            // 3. Return formatted response
+            res.status(200).json({
+                success: true,
+                data: task,
+                message: "Task retrieved successfully",
+            } as IApiResponse);
         } catch (err) {
             next(err);
         }
     }
 
-    public static async createPost(
+    public static async createTask(
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
-            const { title, completed } = req.body;
+            const { title, description } = req.body;
 
-            // Validation to make sure these types are valid
-            if (typeof title !== "string" || !title.trim()) {
-                const errJsonMessage = {
-                    message: "Title is required and must be of type string",
-                };
-                res.status(400).json(errJsonMessage);
+            // 1. Basic input validation (HTTP layer concern)
+            if (!title || typeof title !== "string") {
+                res.status(400).json({
+                    success: false,
+                    error: "Title is required and must be a string",
+                } as IApiResponse);
                 return;
             }
 
-            if (completed !== undefined && typeof completed !== "boolean") {
-                const errMessage = {
-                    message: "Completed must be boolean",
-                };
-                res.status(400).json(errMessage);
-                return;
-            }
-            const newTask = new Task({
-                title: title.trim(),
-                completed: completed || false,
-                // createdAt: new Date(), Will be set automatically by the schema
+            // 2. Call service to create task
+            const newTask = await TaskService.createTask({
+                title,
+                description,
             });
 
-            // Save to the DB
-            const savedTask = await newTask.save();
-            res.status(201).json(savedTask);
+            // 3. Return formatted response
+            res.status(201).json({
+                success: true,
+                data: newTask,
+                message: "Task created successfully",
+            } as IApiResponse);
         } catch (err) {
             next(err);
         }
     }
 
-    public static async deletePost(
+    public static async updateTask(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const { id } = req.params;
+            const updateData = req.body;
+
+            // 1. Call service to update task
+            const updatedTask = await TaskService.updateTask(id, updateData);
+
+            // 2. Handle not found case
+            if (!updatedTask) {
+                res.status(404).json({
+                    success: false,
+                    error: "Task not found",
+                } as IApiResponse);
+                return;
+            }
+
+            // 3. Return formatted response
+            res.status(200).json({
+                success: true,
+                data: updatedTask,
+                message: "Task updated successfully",
+            } as IApiResponse);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    public static async deleteTask(
         req: Request,
         res: Response,
         next: NextFunction
@@ -90,55 +128,22 @@ export class PostController {
         try {
             const { id } = req.params;
 
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({
-                    message: "Invalid ID format",
-                });
+            // 1. Call service to delete task
+            const deletedTask = await TaskService.deleteTask(id);
+
+            // 2. Handle not found case
+            if (!deletedTask) {
+                res.status(404).json({
+                    success: false,
+                    error: "Task not found",
+                } as IApiResponse);
                 return;
             }
 
-            const post = await Task.findByIdAndDelete(id);
-
-            if (!post) {
-                res.status(404).json({ message: "Post was not found" });
-                return;
-            }
-
+            // 3. Return success response (no content)
             res.status(204).send();
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    public static async updatePost(
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ): Promise<void> {
-        try {
-            const { id } = req.params;
-            const requestBody = req.body;
-
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({
-                    message: "Invalid ID format",
-                });
-                return;
-            }
-
-            const post = await Task.findByIdAndUpdate(id, requestBody, {
-                new: true,
-                runValidators: true,
-            });
-
-            if (!post) {
-                res.status(404).json({ message: "Post was not found" });
-                return;
-            }
-
-            res.status(200).json(post);
-        } catch (error) {
-            next(error);
+        } catch (err) {
+            next(err);
         }
     }
 }

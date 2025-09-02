@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PostController } from "../controllers/task.controller";
+import { TaskController } from "../controllers/task.controller";
 
 // We define a router
 const taskRoutes = Router();
@@ -9,17 +9,17 @@ taskRoutes.get("/", (_req, res) => {
     res.send("Welcome to my Express API using TS YAY2");
 });
 
-taskRoutes.get("/posts", PostController.getAllPosts);
+taskRoutes.get("/posts", TaskController.getAllTasks);
 
 // Get a post by ID
-taskRoutes.get("/posts/:id", PostController.getPostById);
+taskRoutes.get("/posts/:id", TaskController.getTaskById);
 
 // Post a new Post
-taskRoutes.post("/posts", PostController.createPost);
+taskRoutes.post("/posts", TaskController.createTask);
 
 // DELETE a post
-taskRoutes.delete("/posts/:id", PostController.deletePost);
+taskRoutes.delete("/posts/:id", TaskController.deleteTask);
 
-taskRoutes.put("/posts/:id", PostController.updatePost);
+taskRoutes.put("/posts/:id", TaskController.updateTask);
 
 export default taskRoutes;

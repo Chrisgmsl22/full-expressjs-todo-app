@@ -5,7 +5,7 @@ export default [
     js.configs.recommended,
     ...tseslint.configs.recommended,
     {
-        files: ["**/*.ts"],
+        files: ["src/**/*.ts"],
         languageOptions: {
             parser: tseslint.parser,
             parserOptions: {
@@ -16,9 +16,15 @@ export default [
                 console: "readonly",
             },
         },
+        rules: {
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                { argsIgnorePattern: "^_" },
+            ],
+        },
     },
     {
-        files: ["**/*.js"],
+        files: ["src/**/*.js"],
         languageOptions: {
             globals: {
                 process: "readonly",
