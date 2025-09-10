@@ -2,9 +2,10 @@
 
 import mongoose from "mongoose";
 import { UserModel } from "../models/user.model";
-import { IJwtPayload, IRegisterRequest, ITokenVerificationResult, IUser } from "../types";
+import { IJwtPayload, IRegisterRequest, ITokenVerificationResult, IUser, IUserExistsCheck, IUserInput } from "../types";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken"
+import { AuthenticationError, ConflictError, ValidationError } from "../utils";
 
 /**
  *
@@ -46,23 +47,53 @@ export class AuthService {
     }
 
     public static async findUserByEmail(email: string): Promise<IUser | null> {
-        return await UserModel.findOne({ email: email.toLowerCase() });
+        return await UserModel.findOne({ email });
     }
     public static async findUserById(userId: string): Promise<IUser | null> {
         return await UserModel.findById(userId)
     }
 
+    public static async checkUserConflicts(email: string, username: string): Promise<IUserExistsCheck> {
+        // Single DB query using $or operator for efficiency
+        const existingUser = await UserModel.findOne({
+            $or: [
+                { email: email.toLowerCase() },
+                { username: username }
+            ]
+        })
+
+        if (!existingUser) {
+            return {exists: false}
+        }
+
+        // Determine which field conflicts
+    if (existingUser.email === email.toLowerCase()) {
+        return {
+            exists: true,
+            conflictField: 'email',
+            message: 'User with this email already exists'
+        };
+    } else {
+        return {
+            exists: true,
+            conflictField: 'username', 
+            message: 'Username already exists'
+        };
+    }
+    }
+
+    
     public static async createUser(userData: IRegisterRequest): Promise<IUser> {
-        // First, check if the user already exists
-        const existingUser = await AuthService.findUserByEmail(userData.email);
-        if (existingUser) {
-            throw new Error("User with this email already exists");
+        const conflict = await AuthService.checkUserConflicts(userData.email, userData.username)
+
+        if (conflict.exists) {
+            throw new ConflictError(conflict.message!) // If we ever get to this point, we know for sure there will be a message
         }
 
         // Validate that the given email is valid
         const isValidEmail = await AuthService.validateEmail(userData.email);
         if (!isValidEmail) {
-            throw new Error("Invalid email format");
+            throw new ValidationError("Invalid email format");
         }
 
         const isValidPassword = AuthService.validatePasswordStrength(
@@ -70,7 +101,7 @@ export class AuthService {
         );
 
         if (!isValidPassword) {
-            throw new Error(
+            throw new AuthenticationError(
                 "Password is not valid, must be at least 8 digits long, must contain alpha numeric characters"
             );
         }
@@ -80,23 +111,26 @@ export class AuthService {
             userData.password
         );
 
-        // Create user object (in real app, this would save to database)
-        const newUser = new UserModel<IUser>({
+        // Create user object with strict typing
+        const userCreateData: IUserInput = {
             username: userData.username,
             email: userData.email,
             password: hashedPassword,
             createdAt: new Date(),
             isActive: true,
             emailVerified: false,
-        });
+        };
+        
+        const newUser = new UserModel(userCreateData);
 
-        return await newUser.save();
+        return await newUser.save()
     }
 
-    // Hacky approach for adding compatibility for mongoose's built-in id obj
-    public static async generateToken(currentUser: IUser & {_id: mongoose.Types.ObjectId}): Promise<string> {
+    // Hacky approach for adding compatibility for mongoose's built-in id object
+    
+    public static generateToken(currentUser: IUser): string {
         const payload: IJwtPayload = {
-            userId: currentUser._id.toString(),
+            userId: currentUser.id, // Mongoose virtual getter, we can assume it always works
             email: currentUser.email,
             userName: currentUser.username
         }
@@ -156,5 +190,14 @@ export class AuthService {
 
         // At this point, we can assume the user is valid
         return user as IUser & {_id: mongoose.Types.ObjectId}
+    }
+
+    public static logout(): {success: boolean; message: string} {
+        // JWT is stateless, so we just return success
+        // Client should delete token from localStorage/cookies
+        return {
+            success: true, 
+            message: "Logged out successfully!. Please remove token from client"
+        }
     }
 }

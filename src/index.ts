@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import mongoose, { ConnectOptions } from "mongoose";
 import { Task } from "./models/task.model";
 import { checkDatabaseConnection } from "./middleware/checkDatabaseConnection";
+import userRoutes from "./routes/user.routes";
 
 dotenv.config({ path: ".env" });
 const app = express();
@@ -47,7 +48,9 @@ app.use(express.json()); // express.json is a middleware
 
 // Mount the routes under /api
 app.use("/api", checkDatabaseConnection, taskRoutes);
+app.use("/api", userRoutes)
 
+// MUST BE LAST
 app.use(errorHandler);
 
 app.listen(PORT, () => {

@@ -5,6 +5,15 @@ export default [
     js.configs.recommended,
     ...tseslint.configs.recommended,
     {
+        // 🎯 Add ignore patterns
+        ignores: [
+            "dist/**/*",
+            "node_modules/**/*",
+            "*.js",
+            "*.mjs"
+        ],        
+    },
+    {
         files: ["src/**/*.ts"],
         languageOptions: {
             parser: tseslint.parser,
