@@ -1,10 +1,23 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import { AppError } from "../utils";
+import { IAuthResponse } from "../types";
 
-export const errorHandler = (err: Error, _req: Request, res: Response) => {
+//? In order to have an actual next() middleware handler, we need to define this function with EXACTLY 4 params
+// error, request, response and next()
+export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error("Error: ", err.stack);
 
-    res.status(500).json({
-        message: "An unexpected error ocurred.",
-        error: err.message,
-    });
+    // Handle custom application errors
+    if (err instanceof AppError) {
+        res.status(err.statusCode).json({
+            success: false,
+            message: err.message
+        } as IAuthResponse);
+    } else {
+        // Generic server error for unknown errors
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        } as IAuthResponse);
+    }
 };
