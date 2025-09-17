@@ -1,11 +1,10 @@
 // Business logic, hashing, validation, etc
 
-import mongoose from "mongoose";
 import { UserModel } from "../models/user.model";
 import { IJwtPayload, IRegisterRequest, ITokenVerificationResult, IUser, IUserExistsCheck, IUserInput } from "../types";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken"
-import { AuthenticationError, ConflictError, ValidationError } from "../utils";
+import { AccountDeactivationError, AuthenticationError, ConflictError, ValidationError } from "../utils";
 
 /**
  *
@@ -169,27 +168,27 @@ export class AuthService {
         }
     }
 
-    public static async validateLogin(email: string, password: string): Promise<IUser & {_id: mongoose.Types.ObjectId}> {
+    public static async validateLogin(email: string, password: string): Promise<IUser> {
         // 1. Try to find the user
         const user = await this.findUserByEmail(email)
         if (!user) {
-            throw new Error("Invalid email or password") // DO NOT reveal which one is wrong for security
+            throw new AuthenticationError("Invalid email or password") // DO NOT reveal which one is wrong for security
         }
 
         // Check if account is still active
         if(!user.isActive){
-            throw new Error("Account has been deactivated")
+            throw new AccountDeactivationError("Account has been deactivated")
         }
 
         // compare passwords to check if login is valid
         const isPasswordValid = await this.comparePassword(password, user.password)
 
         if (!isPasswordValid) {
-            throw new Error ('Invalid email or password')
+            throw new AuthenticationError ('Invalid email or password')
         }
 
         // At this point, we can assume the user is valid
-        return user as IUser & {_id: mongoose.Types.ObjectId}
+        return user as IUser
     }
 
     public static logout(): {success: boolean; message: string} {

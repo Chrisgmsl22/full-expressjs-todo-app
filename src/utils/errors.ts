@@ -1,23 +1,39 @@
 /**
- * This class will have all possible errors so that its an easier error handling experience
+ * Base class for all custom errors with HTTP status codes
  */
-export class ValidationError extends Error {
-    constructor(message: string) {
-        super(message)
-        this.name = "ValidationError"
+export abstract class AppError extends Error {
+    public readonly statusCode: number;
+
+    constructor(message: string, statusCode: number) {
+        super(message);
+        this.statusCode = statusCode;
+        this.name = this.constructor.name;
     }
 }
 
-export class ConflictError extends Error {
+/**
+ * Custom error classes with their respective HTTP status codes
+ */
+export class ValidationError extends AppError {
     constructor(message: string) {
-        super(message)
-        this.name = "ConflictError"
+        super(message, 400);
     }
 }
 
-export class AuthenticationError extends Error {
+export class ConflictError extends AppError {
     constructor(message: string) {
-        super(message)
-        this.name = "AuthenticationError"
+        super(message, 409);
+    }
+}
+
+export class AuthenticationError extends AppError {
+    constructor(message: string) {
+        super(message, 401);
+    }
+}
+
+export class AccountDeactivationError extends AppError {
+    constructor(message: string) {
+        super(message, 403);
     }
 }

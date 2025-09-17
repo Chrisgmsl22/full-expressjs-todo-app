@@ -52,10 +52,41 @@ export class UserController {
     // 4. Return success response with user data + token
     // 5. Handle errors (invalid credentials, user not found, etc.)
     public static async login(
-        _req: Request,
-        _res: Response,
-        _next: NextFunction
-    ) {}
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const {email, password} = req.body
+            const propsMissing = !email || !password
+            const propTypesNotValid = typeof email !== "string" || typeof password !== "string"
+            if (propsMissing || propTypesNotValid){
+                res.status(400).json({
+                    success: false,
+                    error: "email and password are required and must be strings"
+                })
+                return
+            }
+
+            const validatedUser = await AuthService.validateLogin(email, password)
+            const userJwt = AuthService.generateToken(validatedUser)
+
+            res.status(200).json({
+                success: true,
+                message: "User logged in successfully",
+                user: {
+                    id: validatedUser.id,
+                    username: validatedUser.username,
+                    email: validatedUser.email,
+                    createdAt: validatedUser.createdAt
+                },
+                token: userJwt
+            } as IAuthResponse)
+        
+        } catch (error) {
+            next(error)
+        }
+    }
 
     // What it should do (simpler with JWT):
     // 1. Since JWT is stateless, just return success message
@@ -63,9 +94,20 @@ export class UserController {
     // 3. (Optional: Could implement token blacklisting later)
     public static async logout(
         _req: Request,
-        _res: Response,
-        _next: NextFunction
-    ) {}
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            
+            const logoutRes = AuthService.logout() as IAuthResponse
+
+            res.status(200).json(logoutRes)
+        } catch (error) {
+            next(error)
+        }
+
+    
+    }
 
     // Future-proofing user operations (for now these are defined as empty)
     public static async getProfile(
