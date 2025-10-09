@@ -37,3 +37,9 @@ export class AccountDeactivationError extends AppError {
         super(message, 403);
     }
 }
+
+export class UserNotFoundError extends AppError {
+    constructor(message: string) {
+        super(message, 404)
+    }
+}

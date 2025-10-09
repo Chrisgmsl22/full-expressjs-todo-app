@@ -9,8 +9,8 @@
 
 ## Current Status
 
-**Current Phase**: Phase 2 - Persistence with MongoDB ✅ COMPLETED
-**Last Updated**: August 2025
+**Current Phase**: Phase 3 - Authentication & Security ✅ COMPLETED
+**Last Updated**: December 2024
 **Project**: Full ExpressJS Todo App
 
 ## Phase Breakdown
@@ -35,15 +35,15 @@
 -   ✅ Store DB credentials in .env
 
 **What was learned**: MongoDB connection, Mongoose schemas, CRUD operations, database validation
-**Next Phase**: Authentication & Security
+**Next Phase**: Docker & Containerization
 
-### Phase 3: Auth and Security (Weeks 3–4)
+### Phase 3: Auth and Security (Weeks 3–4) ✅ COMPLETED
 
--   Create user model and auth routes
--   Implement JWT login and register
--   Hash passwords with bcrypt
--   Protect routes using middleware
--   Add role-based access control (optional)
+-   ✅ Create user model and auth routes
+-   ✅ Implement JWT login and register
+-   ✅ Hash passwords with bcrypt
+-   ✅ Protect routes using middleware
+-   ✅ Add role-based access control (optional)
 
 ### Phase 4: Dockerize the App (Weeks 4–5)
 
@@ -70,8 +70,8 @@
 ## Weekly Breakdown
 
 -   **Week 1**: Express + TypeScript basics — Working routes, controllers, errors ✅
--   **Week 2**: MongoDB + Mongoose — CRUD with database 🔄
--   **Weeks 3–4**: Auth & middleware — Login/register + JWT
+-   **Week 2**: MongoDB + Mongoose — CRUD with database ✅
+-   **Weeks 3–4**: Auth & middleware — Login/register + JWT ✅
 -   **Weeks 4–5**: Docker — Fully containerized app
 -   **Week 6**: Deployment — Live version of app online
 -   **Week 7+**: Advanced features — Production-ready features
@@ -114,10 +114,14 @@
 
 ## Current Session Notes
 
-**Date**: [Current Date]
-**Focus**: Setting up MongoDB integration
-**Key Questions**: [To be filled during our sessions]
-**Next Session Goals**: [To be filled during our sessions]
+**Date**: December 2024
+**Focus**: Phase 3 Authentication & Security - COMPLETED ✅
+**Key Achievements**: 
+- Implemented complete JWT authentication system
+- Created AuthService with password hashing, validation, and token management
+- Built authenticateJWT middleware for route protection
+- Successfully tested authentication flow with Postman
+**Next Session Goals**: Begin Phase 4 - Docker & Containerization
 
 ## Project Structure
 
