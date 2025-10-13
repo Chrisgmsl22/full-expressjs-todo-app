@@ -1,0 +1,32 @@
+
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7
+    container_name: todo-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: todo-app-db
+
+  # Your Todo App
+  app:
+    build: .
+    container_name: todo-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    env_file:
+      - .env.docker
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  mongo_data:
