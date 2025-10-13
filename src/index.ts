@@ -7,7 +7,11 @@ import { Task } from "./models/task.model";
 import { checkDatabaseConnection } from "./middleware/checkDatabaseConnection";
 import userRoutes from "./routes/user.routes";
 
-dotenv.config({ path: ".env" });
+// Only load this if we're not in docker
+if (!process.env.DOCKER_ENV) {
+    dotenv.config({ path: ".env" });
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const mongoUri =
