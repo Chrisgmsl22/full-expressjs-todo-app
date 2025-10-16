@@ -2,3 +2,11 @@ node_modules/
 dist/
 .env
 .env.production
+
+# Test coverage
+coverage/
+*.coverage
+.nyc_output/
+
+# Keep the test files themselves
+# (Don't add *.test.ts to gitignore!)

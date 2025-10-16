@@ -15,12 +15,12 @@ import { AccountDeactivationError, AuthenticationError, ConflictError, Validatio
  *  5. Create a new user
  */
 export class AuthService {
-    private static async hashPassword(password: string): Promise<string> {
+    public static async hashPassword(password: string): Promise<string> {
         const saltRounds: number = 12;
 
         return await bcrypt.hash(password, saltRounds);
     }
-    private static async comparePassword(
+    public static async comparePassword(
         givenPassword: string,
         hash: string
     ): Promise<boolean> {

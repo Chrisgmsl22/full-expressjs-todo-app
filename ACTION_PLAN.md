@@ -9,7 +9,7 @@
 
 ## Current Status
 
-**Current Phase**: Phase 4 - Docker & Containerization ✅ COMPLETED
+**Current Phase**: Phase 6 - Testing & Quality Assurance 🚀 IN PROGRESS
 **Last Updated**: October 2024
 **Project**: Full ExpressJS Todo App
 
@@ -60,20 +60,35 @@
 **What was learned**: Docker containerization, docker-compose orchestration, Docker networking, port mapping, volume persistence, hybrid development workflows, Makefile automation
 **Next Phase**: Deployment + Remote DB
 
-### Phase 5: Deployment + Remote DB (Week 6–7)
+### Phase 5: Deployment + Remote DB (Week 6–7) ✅ COMPLETED
 
--   Connect to MongoDB Atlas (remote)
--   Deploy using Render, Railway, or AWS
--   Manage secrets and environment vars
--   Set up CI/CD with GitHub Actions
+-   ✅ Connect to MongoDB Atlas (remote)
+-   ✅ Deploy using Render
+-   ✅ Manage secrets and environment vars
+-   ⏭️ Set up CI/CD with GitHub Actions (deferred to after testing)
 
-### Phase 6: Advanced Topics (Week 8+)
+**What was learned**: Cloud database setup (MongoDB Atlas), environment variable management, URL encoding for special characters, Render deployment platform, Docker-based cloud deployment
+**Next Phase**: Testing & Quality Assurance
 
--   Add unit and integration testing (Jest, Supertest)
+### Phase 6: Testing & Quality Assurance (Week 8+) 🚀 IN PROGRESS
+
+-   ⏳ Set up Jest testing framework
+-   ⏳ Write unit tests for services
+-   ⏳ Write unit tests for middleware
+-   ⏳ Write integration tests with Supertest
+-   ⏳ Test protected routes with JWT
+-   ⏳ Add test coverage reporting
+-   ⏳ Set up CI/CD with GitHub Actions
+
+**Learning Goals**: Test-driven development, mocking, test coverage, integration testing, CI/CD automation
+
+### Phase 7: Advanced Topics (Week 9+)
+
 -   Implement Redis caching
 -   Add pagination, filtering, search
 -   Upload files (e.g., to S3 or Cloudinary)
 -   Explore microservices and WebSockets
+-   Performance optimization
 
 ## Weekly Breakdown
 
@@ -81,8 +96,9 @@
 -   **Week 2**: MongoDB + Mongoose — CRUD with database ✅
 -   **Weeks 3–4**: Auth & middleware — Login/register + JWT ✅
 -   **Weeks 4–5**: Docker — Fully containerized app ✅
--   **Week 6**: Deployment — Live version of app online
--   **Week 7+**: Advanced features — Production-ready features
+-   **Week 6**: Deployment — Live version of app online ✅
+-   **Week 7**: Testing — Unit and integration tests 🚀
+-   **Week 8+**: Advanced features — Production-ready features
 
 ## Learning Approach & Guidelines
 
@@ -123,15 +139,20 @@
 ## Current Session Notes
 
 **Date**: October 2024
-**Focus**: Phase 4 Docker & Containerization - COMPLETED ✅
-**Key Achievements**: 
-- Created Dockerfile for app containerization
-- Built docker-compose.yml for multi-container orchestration (app + MongoDB)
-- Implemented hybrid development workflow (local app + Docker DB)
-- Created comprehensive Makefile with Docker commands
-- Learned Docker networking, port mapping, and volume persistence
-- Verified data persistence across container restarts
-**Next Session Goals**: Begin Phase 5 - Deployment & MongoDB Atlas
+**Focus**: Phase 6 Testing & Quality Assurance - IN PROGRESS 🚀
+
+**Phase 5 Achievements (Recently Completed)**: 
+- ✅ Connected to MongoDB Atlas (cloud database)
+- ✅ Deployed app to Render.com successfully
+- ✅ Configured environment variables for production
+- ✅ Learned URL encoding for special characters in connection strings
+- ✅ App live at: https://full-expressjs-todo-app.onrender.com
+
+**Current Session Goals**: 
+- Set up Jest testing framework
+- Write first unit tests for services
+- Understand testing concepts (unit vs integration)
+- Learn mocking and test doubles
 
 ## Project Structure
 
@@ -149,12 +170,13 @@ src/
 
 -   **Runtime**: Node.js with Express.js
 -   **Language**: TypeScript
--   **Database**: MongoDB with Mongoose
+-   **Database**: MongoDB with Mongoose (local + Atlas cloud)
 -   **Authentication**: JWT (jsonwebtoken) + bcrypt
 -   **Containerization**: Docker + Docker Compose
--   **Development Tools**: Makefile, ts-node-dev
--   **Testing**: [To be added]
--   **Deployment**: [To be added]
+-   **Deployment**: Render.com (Docker-based)
+-   **Development Tools**: Makefile, ts-node-dev, Postman
+-   **Testing**: Jest + Supertest (in progress)
+-   **CI/CD**: GitHub Actions (planned)
 
 ## Notes & Commands
 
