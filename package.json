@@ -3,14 +3,16 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
         "dev": "ts-node-dev src/index.ts",
         "build": "tsc",
         "watch": "tsc --watch",
         "start": "node dist/index.js",
         "prepare": "husky install",
         "lint": "eslint src --ext .ts",
-        "lint:fix": "eslint src --ext .ts --fix"
+        "lint:fix": "eslint src --ext .ts --fix",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:watch": "jest --watch"
     },
     "keywords": [],
     "author": "",
@@ -28,12 +30,17 @@
     "devDependencies": {
         "@types/bcrypt": "^6.0.0",
         "@types/express": "^5.0.3",
+        "@types/jest": "^30.0.0",
         "@types/node": "^24.0.10",
+        "@types/supertest": "^6.0.3",
         "@typescript-eslint/eslint-plugin": "^8.37.0",
         "@typescript-eslint/parser": "^8.37.0",
         "eslint": "^9.31.0",
         "husky": "^9.1.7",
+        "jest": "^30.2.0",
         "nodemon": "^3.1.10",
+        "supertest": "^7.1.4",
+        "ts-jest": "^29.4.5",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.37.0"
