@@ -64,21 +64,21 @@ export class AuthService {
         if (!existingUser) {
             return {exists: false}
         }
-
+        
         // Determine which field conflicts
-    if (existingUser.email === email.toLowerCase()) {
-        return {
-            exists: true,
-            conflictField: 'email',
-            message: 'User with this email already exists'
-        };
-    } else {
-        return {
-            exists: true,
-            conflictField: 'username', 
-            message: 'Username already exists'
-        };
-    }
+        if (existingUser.email === email.toLowerCase()) {
+            return {
+                exists: true,
+                conflictField: 'email',
+                message: 'User with this email already exists'
+            };
+        } else {
+            return {
+                exists: true,
+                conflictField: 'username', 
+                message: 'Username already exists'
+            };
+        }
     }
 
     
