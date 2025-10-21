@@ -1,5 +1,5 @@
-import { IJwtPayload, IRegisterRequest, IUser } from "../types";
-import { AuthenticationError, ConflictError, ValidationError } from "../utils";
+import { IJwtPayload, IRegisterRequest, IUser, MongoUserResult } from "../types";
+import { AccountDeactivationError, AuthenticationError, ConflictError, ValidationError } from "../utils";
 import { AuthService } from "./auth.service";
 import { UserModel } from "../models/user.model";
 import jwt from "jsonwebtoken"
@@ -257,7 +257,6 @@ describe('AuthService', () => {
     
             const token = AuthService.generateToken(mockUser);
             const decoded = jwt.verify(token, 'test-secret-key') as jwt.JwtPayload;
-            console.log(decoded)
     
             expect(decoded.userId).toBe('123456');
             expect(decoded.email).toBe('test@example.com');
@@ -354,5 +353,204 @@ describe('AuthService', () => {
             expect(result.error).toBe('Invalid token');
         });
     });
+
+    describe('validateLogin', () => {
+        it('Should successfully validate correct credentials', async () => {
+            const hashedPassword = await AuthService.hashPassword('validPassword123#')
+
+            const mockUser = {
+                _id: '123',
+                email: 'user@example.com',
+                username: 'testuser',
+                password: hashedPassword,
+                isActive: true,
+                emailVerified: false,
+                createdAt: new Date()
+            } as MongoUserResult
+
+            // Mock Mongo's response returning a valid user
+            (UserModel.findOne as jest.Mock).mockResolvedValue(mockUser)
+
+            const emailAttempt = "user@example.com"
+            const passwordAttempt = "validPassword123#"
+            const result = await AuthService.validateLogin(emailAttempt, passwordAttempt)
+
+            expect(result).toBeDefined()
+            expect(result.email).toBe(emailAttempt)
+            expect(result.isActive).toBe(true)
+        })
+
+        it('Should throw AuthenticationError for non-exisent user', async () => {
+            (UserModel.findOne as jest.Mock).mockResolvedValue(null)
+
+            const emailAttempt = "user@example.com"
+            const passwordAttempt = "validPassword123#"
+           
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+                .rejects
+                .toThrow(AuthenticationError);
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+            .rejects
+            .toThrow('Invalid email or password');
+        })
+
+        it('Should throw AuthenticationError for incorrect password', async () => {
+            const hashedPassword = await AuthService.hashPassword('myPassword123#')
+
+            const mockUser = {
+                _id: '123',
+                email: 'user@example.com',
+                username: 'testuser',
+                password: hashedPassword,
+                isActive: true,
+                emailVerified: false,
+                createdAt: new Date()
+            } as MongoUserResult;
+
+            (UserModel.findOne as jest.Mock).mockResolvedValue(mockUser); // There is a user in our DB
+
+            const emailAttempt = "user@example.com"
+            const passwordAttempt = "wrongPassword44"
+
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+                .rejects
+                .toThrow(AuthenticationError)
+            
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+                .rejects
+                .toThrow('Invalid email or password')
+
+        })
+
+        it('Should throw AccountDeactivationError for inactive accounts', async () => {
+            const hashedPassword = await AuthService.hashPassword('myPassword123#')
+            const isUserActive = false
+            
+            const mockUser = {
+                _id: '123',
+                email: 'user@example.com',
+                username: 'testuser',
+                password: hashedPassword,
+                isActive: isUserActive,
+                emailVerified: false,
+                createdAt: new Date()
+            } as MongoUserResult;
+
+            (UserModel.findOne as jest.Mock).mockResolvedValue(mockUser); // There is a user in our DB
+
+            const emailAttempt = "user@example.com"
+            const passwordAttempt = "myPassword123#"
+
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+                .rejects
+                .toThrow(AccountDeactivationError)
+            
+            await expect(AuthService.validateLogin(emailAttempt, passwordAttempt))
+                .rejects
+                .toThrow('Account has been deactivated')
+        })
+    })
+
+    describe('findUserById', () => {
+        it('Should return user when found by ID', async () => {
+            const mockUser = {
+                _id: '123456',
+                email: 'user@example.com',
+                username: 'testuser',
+                password: 'hashed',
+                isActive: true,
+                emailVerified: false,
+                createdAt: new Date()
+            } as MongoUserResult
+
+            (UserModel.findById as jest.Mock).mockResolvedValue(mockUser)
+
+            const res = await AuthService.findUserById('123456')
+
+            expect(res).toBeDefined()
+            expect(UserModel.findById).toHaveBeenCalledWith('123456')
+        })
+
+        it('Should return null when a user ID is not foud', async () => {
+            (UserModel.findById as jest.Mock).mockResolvedValue(null)
+
+            const res = await AuthService.findUserById('0000')
+
+            expect(res).toBeNull()
+        })
+    })
+
+    describe('findUserByEmail', () => {
+        it('Should return user when found', async () => {
+            const mockUser = {
+                _id: '123',
+                email: 'found@example.com',
+                username: 'founduser',
+                password: 'hashed',
+                isActive: true,
+                emailVerified: false,
+                createdAt: new Date()
+            };
+
+            (UserModel.findOne as jest.Mock).mockResolvedValue(mockUser)
+
+            const attemptEmail = 'found@example.com'
+            const res = await AuthService.findUserByEmail(attemptEmail)
+
+            expect(res).toBeDefined()
+            expect(res?.email).toBe(attemptEmail)
+            expect(UserModel.findOne).toHaveBeenCalledWith({email: attemptEmail})
+        })
+
+        it('Should return null when user is not found', async () => {
+            (UserModel.findOne as jest.Mock).mockResolvedValue(null)
+
+            const res = await AuthService.findUserByEmail('notFound@example.com')
+            expect(res).toBeNull()
+        })
+    })
+
+
+    describe('checkUserConflicts', () => {
+        it('Should return no conflict when user does not exist', async () => {
+            (UserModel.findOne as jest.Mock).mockResolvedValue(null)
+
+            const res = await AuthService.checkUserConflicts('new@example.com', 'new-username')
+
+            expect(res.exists).toBe(false)
+            expect(res.conflictField).toBeUndefined()
+            expect(res.message).toBeUndefined()
+        })
+
+        it('Should detect email conflict', async () => {
+            const existingUser = {
+                email: 'existingUser@example.com',
+                username: 'existingUsername'
+            };
+
+            (UserModel.findOne as jest.Mock).mockResolvedValue(existingUser);
+
+            const res = await AuthService.checkUserConflicts('existingUser@example.com', 'newUsername123')
+
+            expect(res.exists).toBe(true);
+            expect(res.conflictField).toBe('email');
+            expect(res.message).toBe('User with this email already exists')
+        })
+
+        it('Should detect username conflict', async () => {
+            const existingUser = {
+                email: 'existingUser@example.com',
+                username: 'existingUsername'
+            };
+
+            (UserModel.findOne as jest.Mock).mockResolvedValue(existingUser);
+
+            const res = await AuthService.checkUserConflicts('new@example.com', 'existingUsername')
+
+            expect(res.exists).toBe(true);
+            expect(res.conflictField).toBe('username');
+            expect(res.message).toBe('Username already exists')
+        })
+    })
 })
 

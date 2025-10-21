@@ -66,7 +66,7 @@ export class AuthService {
         }
         
         // Determine which field conflicts
-        if (existingUser.email === email.toLowerCase()) {
+        if (existingUser.email.toLowerCase() === email.toLowerCase()) {
             return {
                 exists: true,
                 conflictField: 'email',
@@ -175,18 +175,18 @@ export class AuthService {
             throw new AuthenticationError("Invalid email or password") // DO NOT reveal which one is wrong for security
         }
 
+        
+        // compare passwords to check if login is valid
+        const isPasswordValid = await this.comparePassword(password, user.password)
+        
+        if (!isPasswordValid) {
+            throw new AuthenticationError ('Invalid email or password')
+        }
+        
         // Check if account is still active
         if(!user.isActive){
             throw new AccountDeactivationError("Account has been deactivated")
         }
-
-        // compare passwords to check if login is valid
-        const isPasswordValid = await this.comparePassword(password, user.password)
-
-        if (!isPasswordValid) {
-            throw new AuthenticationError ('Invalid email or password')
-        }
-
         // At this point, we can assume the user is valid
         return user as IUser
     }
