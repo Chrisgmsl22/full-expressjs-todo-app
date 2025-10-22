@@ -1,4 +1,4 @@
-.PHONY: help install build dev start lint clean docker-build docker-up docker-down docker-restart docker-logs docker-clean db-up db-down hybrid-dev
+.PHONY: help install build dev start lint clean docker-build docker-up docker-down docker-restart docker-logs docker-clean db-up db-down start-hybrid-dev
 
 # Default target - shows help
 help:
@@ -6,7 +6,7 @@ help:
 	@echo "📋 Available Commands"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "🏠 Local Development:"
+	@echo " Local Development:"
 	@echo "  make install          - Install dependencies"
 	@echo "  make build            - Build TypeScript"
 	@echo "  make dev              - Run dev server locally"
@@ -15,25 +15,19 @@ help:
 	@echo "  make lint-fix         - Fix ESLint issues"
 	@echo "  make clean            - Clean dist and node_modules"
 	@echo ""
-	@echo "🔀 Hybrid Development (Recommended):"
-	@echo "  make hybrid-dev       - Start DB in Docker, run app locally"
+	@echo " Hybrid Development (Recommended):"
+	@echo "  make start-hybrid-dev       - Start DB in Docker, run app locally"
 	@echo "  make db-up            - Start only MongoDB in Docker"
 	@echo "  make db-down          - Stop MongoDB"
 	@echo "  make db-logs          - View MongoDB logs"
 	@echo ""
-	@echo "🐳 Full Docker:"
+	@echo " Full Docker:"
 	@echo "  make docker-build     - Build Docker images"
 	@echo "  make docker-up        - Start all containers"
 	@echo "  make docker-down      - Stop all containers"
 	@echo "  make docker-restart   - Restart containers"
-	@echo "  make docker-logs      - View all Docker logs"
-	@echo "  make docker-logs-app  - View app logs only"
-	@echo "  make docker-logs-db   - View MongoDB logs only"
-	@echo "  make docker-clean     - Stop containers and remove volumes"
-	@echo "  make docker-dev       - Build and start all containers"
-	@echo "  make docker-shell     - Open shell in app container"
 	@echo ""
-	@echo "🚀 Quick Setup:"
+	@echo " Quick Setup:"
 	@echo "  make setup-local      - Install + build for local dev"
 	@echo "  make setup-docker     - Build + start Docker"
 	@echo "  make setup-hybrid     - Setup for hybrid development"
@@ -75,12 +69,13 @@ db-down:
 db-logs:
 	docker-compose logs -f mongo
 
-hybrid-dev:
+# You will use this most of the time
+start-hybrid-dev:
 	@echo "🔀 Starting Hybrid Development Mode..."
 	@echo "📦 Starting MongoDB in Docker..."
 	@make db-up
 	@echo ""
-	@echo "🚀 Starting app locally..."
+	@echo " Starting app locally..."
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	npm run dev
 
@@ -105,37 +100,12 @@ docker-restart:
 	docker-compose restart
 	@echo "✅ Containers restarted!"
 
-docker-logs:
-	docker-compose logs -f
 
-docker-logs-app:
-	docker-compose logs -f app
-
-docker-logs-db:
-	docker-compose logs -f mongo
-
-docker-clean:
-	@echo "🧹 Cleaning up Docker containers and volumes..."
-	docker-compose down -v
-	@echo "✅ Cleanup complete!"
-
-docker-dev:
-	@echo "🐳 Building and starting all containers..."
-	docker-compose up --build
-
-docker-shell:
-	@echo "🐚 Opening shell in app container..."
-	docker exec -it todo-app sh
-
-docker-status:
-	@echo "📊 Docker Container Status:"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	docker-compose ps
 
 # ===== Combined Workflows =====
 setup-local: install build
 	@echo "✅ Local setup complete!"
-	@echo "💡 Run 'make hybrid-dev' to start development"
+	@echo "💡 Run 'make start-hybrid-dev' to start development"
 
 setup-docker: docker-build docker-up
 	@echo "✅ Docker setup complete!"
@@ -149,7 +119,7 @@ setup-hybrid: install build db-up
 
 # ===== Testing (for future) =====
 test:
-	@echo "Tests not yet implemented"
+	npm run test
 
 test-docker:
 	docker-compose run app npm test

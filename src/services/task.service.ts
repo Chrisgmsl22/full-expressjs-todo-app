@@ -1,6 +1,7 @@
 import { ITask, ICreateTaskRequest, IUpdateTaskRequest } from "../types";
 import { Task } from "../models/task.model";
 import mongoose from "mongoose";
+import { ValidationError } from "../utils";
 
 export class TaskService {
     public static async getAllTasks(): Promise<ITask[]> {
@@ -9,7 +10,7 @@ export class TaskService {
 
     public static async getTaskById(id: string): Promise<ITask | null> {
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("Invalid ID format");
+            throw new ValidationError("Invalid ID format");
         }
         return await Task.findById(id);
     }
@@ -19,7 +20,7 @@ export class TaskService {
     ): Promise<ITask> {
         // Business logic validation
         if (!taskData.title || !taskData.title.trim()) {
-            throw new Error("Title is required");
+            throw new ValidationError("Title is required");
         }
 
         const newTask = new Task({
@@ -35,8 +36,11 @@ export class TaskService {
         id: string,
         updateData: IUpdateTaskRequest
     ): Promise<ITask | null> {
+        if (!id) {
+            throw new ValidationError('Id is required')
+        }
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("Invalid ID format");
+            throw new ValidationError("Invalid ID format");
         }
 
         return await Task.findByIdAndUpdate(id, updateData, {
@@ -47,7 +51,7 @@ export class TaskService {
 
     public static async deleteTask(id: string): Promise<ITask | null> {
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("Invalid ID format");
+            throw new ValidationError("Invalid ID format");
         }
 
         return await Task.findByIdAndDelete(id);
