@@ -51,7 +51,7 @@ export class TaskService {
 
     public static async deleteTask(id: string): Promise<ITask | null> {
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("Invalid ID format");
+            throw new ValidationError("Invalid ID format");
         }
 
         return await Task.findByIdAndDelete(id);

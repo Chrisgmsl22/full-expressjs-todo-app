@@ -239,4 +239,52 @@ describe('TaskService', () => {
             );
         });
     })
+
+    describe('deleteTask', () => {
+        it('Should delete task', async () => {
+            const taskId = new mongoose.Types.ObjectId().toString()
+
+            const taskDeletedMock = {
+                _id: taskId,
+                title: 'Old task',
+               description: "Should delete this after finishing",
+               completed: true,
+               createdAt: new Date(),
+               updatedAt: new Date(),
+               userId: "someUserId"
+            } as ITask;
+
+            (TaskModel.findByIdAndDelete as jest.Mock).mockResolvedValue(taskDeletedMock);
+
+            const res = await TaskService.deleteTask(taskId);
+
+            expect(res).toBeDefined()
+            expect(res?._id).toBe(taskId)
+            expect(res?.title).toBe('Old task')
+            expect(TaskModel.findByIdAndDelete).toHaveBeenCalledTimes(1)
+            // expect(TaskModel.findByIdAndDelete).toHaveBeenCalledWith()
+        })
+
+        it('Should throw ValidationError for invalid ID', async () => {
+            const invalidId = "invalid-id"
+
+            await expect(TaskService.deleteTask(invalidId))
+                .rejects
+                .toThrow(ValidationError);
+            await expect(TaskService.deleteTask(invalidId))
+                .rejects
+                .toThrow("Invalid ID format");
+        })
+
+        it('Should return null for an ID not found', async () => {
+            const id = new mongoose.Types.ObjectId().toString();
+
+            (TaskModel.findByIdAndDelete as jest.Mock).mockResolvedValue(null)
+
+            const res = await TaskService.deleteTask(id);
+
+            expect(res).toBeNull()
+            expect(TaskModel.findByIdAndDelete).toHaveBeenCalledTimes(1)
+        })
+    })
 })
