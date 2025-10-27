@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
 export const checkDatabaseConnection = (
-    req: Request,
+    _req: Request,
     res: Response,
     next: NextFunction
 ): void => {
