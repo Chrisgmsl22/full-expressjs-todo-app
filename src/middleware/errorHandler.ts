@@ -5,18 +5,17 @@ import { IAuthResponse } from "../types";
 //? In order to have an actual next() middleware handler, we need to define this function with EXACTLY 4 params
 // error, request, response and next()
 export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
-
     // Handle custom application errors
     if (err instanceof AppError) {
         res.status(err.statusCode).json({
             success: false,
-            message: err.message
+            message: err.message,
         } as IAuthResponse);
     } else {
         // Generic server error for unknown errors
         res.status(500).json({
             success: false,
-            message: "Internal server error"
+            message: "Internal server error",
         } as IAuthResponse);
     }
 };
