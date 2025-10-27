@@ -10,17 +10,17 @@ taskRoutes.get("/", (_req, res) => {
     res.send("Welcome to my Express API using TS YAY2");
 });
 
-taskRoutes.get("/posts",authenticateJWT, TaskController.getAllTasks);
+taskRoutes.get("/posts", authenticateJWT, TaskController.getAllTasks);
 
 // Get a post by ID
-taskRoutes.get("/posts/:id",authenticateJWT, TaskController.getTaskById);
+taskRoutes.get("/posts/:id", authenticateJWT, TaskController.getTaskById);
 
 // Post a new Post
-taskRoutes.post("/posts",authenticateJWT, TaskController.createTask);
+taskRoutes.post("/posts", authenticateJWT, TaskController.createTask);
 
 // DELETE a post
-taskRoutes.delete("/posts/:id",authenticateJWT, TaskController.deleteTask);
+taskRoutes.delete("/posts/:id", authenticateJWT, TaskController.deleteTask);
 
-taskRoutes.put("/posts/:id",authenticateJWT, TaskController.updateTask);
+taskRoutes.put("/posts/:id", authenticateJWT, TaskController.updateTask);
 
 export default taskRoutes;

@@ -37,7 +37,7 @@ export class TaskService {
         updateData: IUpdateTaskRequest
     ): Promise<ITask | null> {
         if (!id) {
-            throw new ValidationError('Id is required')
+            throw new ValidationError("Id is required");
         }
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw new ValidationError("Invalid ID format");

@@ -4,7 +4,12 @@ import { IAuthResponse } from "../types";
 
 //? In order to have an actual next() middleware handler, we need to define this function with EXACTLY 4 params
 // error, request, response and next()
-export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (
+    err: Error,
+    _req: Request,
+    res: Response,
+    _next: NextFunction
+) => {
     // Handle custom application errors
     if (err instanceof AppError) {
         res.status(err.statusCode).json({

@@ -1,6 +1,6 @@
 // Authentication related types
 export interface IUser {
-    id: string,
+    id: string;
     username: string;
     email: string;
     password: string;
@@ -11,7 +11,7 @@ export interface IUser {
 }
 
 // For input data (creation), we do not need ID
-export type IUserInput = Omit<IUser, 'id'>;
+export type IUserInput = Omit<IUser, "id">;
 export interface ILoginRequest {
     email: string;
     password: string;
@@ -43,6 +43,6 @@ export interface IAuthError {
 
 export interface IUserExistsCheck {
     exists: boolean;
-    conflictField?: 'email' | 'username';
+    conflictField?: "email" | "username";
     message?: string;
 }
