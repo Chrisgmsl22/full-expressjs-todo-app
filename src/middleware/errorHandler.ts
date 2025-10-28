@@ -17,6 +17,14 @@ export const errorHandler = (
             message: err.message,
         } as IAuthResponse);
     } else {
+        if (process.env.NODE_ENV !== "production") {
+            // Only for debugging purposes
+            console.error("❌ Error Handler Caught:");
+            console.error("Message:", err.message);
+            console.error("Stack:", err.stack);
+            console.error("Type:", err.constructor.name);
+        }
+
         // Generic server error for unknown errors
         res.status(500).json({
             success: false,
