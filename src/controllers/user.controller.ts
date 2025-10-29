@@ -24,14 +24,15 @@ export class UserController {
             if (propsMissing || propTypesNotValid) {
                 res.status(400).json({
                     success: false,
-                    error: "username, email and password are required and must be strings",
+                    message:
+                        "username, email and password are required and must be strings",
                 });
                 return;
             }
 
             // If args are valid, we attempt user creation
             const userCreated = await AuthService.createUser({
-                username: username.toLowerCase(),
+                username: username,
                 email: email.toLowerCase(),
                 password,
             });

@@ -70,7 +70,7 @@ export class AuthService {
     ): Promise<IUserExistsCheck> {
         // Single DB query using $or operator for efficiency
         const existingUser = await UserModel.findOne({
-            $or: [{ email: email.toLowerCase() }, { username: username }],
+            $or: [{ email }, { username: username }],
         });
 
         if (!existingUser) {
@@ -127,7 +127,7 @@ export class AuthService {
         // Create user object with strict typing
         const userCreateData: IUserInput = {
             username: userData.username,
-            email: userData.email,
+            email: userData.email.toLowerCase(),
             password: hashedPassword,
             createdAt: new Date(),
             isActive: true,
@@ -190,7 +190,7 @@ export class AuthService {
         password: string
     ): Promise<IUser> {
         // 1. Try to find the user
-        const user = await this.findUserByEmail(email);
+        const user = await this.findUserByEmail(email.toLowerCase());
         if (!user) {
             throw new AuthenticationError("Invalid email or password"); // DO NOT reveal which one is wrong for security
         }
