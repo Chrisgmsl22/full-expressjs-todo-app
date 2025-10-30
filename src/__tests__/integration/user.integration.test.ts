@@ -41,9 +41,7 @@ describe("User API Integration Tests", () => {
             expect(response.body.data.email).toBe(
                 userDataInput.email.toLowerCase()
             );
-            expect(response.body.data.username).toBe(
-                userDataInput.username.toLowerCase()
-            );
+            expect(response.body.data.username).toBe(userDataInput.username);
         });
 
         it("Should reject registration when email is invalid", async () => {
