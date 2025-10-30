@@ -198,5 +198,82 @@ describe("User API Integration Tests", () => {
             expect(response.body.token).toBeDefined();
             expect(response.body.token.split(".")).toHaveLength(3);
         });
+
+        it("Should reject login if email is not provided", async () => {
+            await registerUser();
+
+            const response = await request(app)
+                .post("/api/auth/login")
+                .send({ password: "MyPassword123#" } as Partial<ILoginRequest>)
+                .expect(400);
+
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe(
+                "email and password are required and must be strings"
+            );
+        });
+
+        it("Should reject login if email is a string", async () => {
+            await registerUser();
+
+            const response = await request(app)
+                .post("/api/auth/login")
+                .send({
+                    password: "MyPassword123#",
+                    email: 1234,
+                })
+                .expect(400);
+
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe(
+                "email and password are required and must be strings"
+            );
+        });
+
+        it("Should reject login if no email and password are provided", async () => {
+            await registerUser();
+
+            const response = await request(app)
+                .post("/api/auth/login")
+                .send({})
+                .expect(400);
+
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe(
+                "email and password are required and must be strings"
+            );
+        });
+
+        it("Should reject login with incorrect password", async () => {
+            await registerUser();
+
+            const response = await request(app)
+                .post("/api/auth/login")
+                .send({
+                    email: "myEmail@test.com",
+                    password: "wrongPassword",
+                } as ILoginRequest)
+                .expect(401);
+
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe("Invalid email or password");
+        });
+
+        it("Should reject login with an email not found", async () => {
+            await registerUser();
+
+            const response = await request(app)
+                .post("/api/auth/login")
+                .send({
+                    email: "newEmail@test.com",
+                    password: "MyPassword123#",
+                } as ILoginRequest)
+                .expect(401);
+
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe("Invalid email or password");
+        });
+
+        it.skip("[Implement this feature] Should reject login for deactivated account", async () => {});
     });
 });

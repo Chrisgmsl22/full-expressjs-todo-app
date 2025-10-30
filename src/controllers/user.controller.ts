@@ -72,7 +72,8 @@ export class UserController {
             if (propsMissing || propTypesNotValid) {
                 res.status(400).json({
                     success: false,
-                    error: "email and password are required and must be strings",
+                    message:
+                        "email and password are required and must be strings",
                 });
                 return;
             }
