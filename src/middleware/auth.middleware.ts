@@ -26,7 +26,7 @@ export const authenticateJWT = async (
     }
 
     const token = authHeader.substring(7); // Removing "Bearer" prefix
-    const { valid, payload } = AuthService.verifyToken(token);
+    const { valid, payload, error } = AuthService.verifyToken(token);
 
     if (valid) {
         // If valid, fetch user from DB
@@ -38,7 +38,7 @@ export const authenticateJWT = async (
             throw new UserNotFoundError("User not found");
         }
     } else {
-        throw new AuthenticationError("Could not validate token");
+        throw new AuthenticationError(error || "Could not validate token");
     }
 
     next();

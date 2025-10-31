@@ -145,7 +145,7 @@ export class AuthService {
         const payload: IJwtPayload = {
             userId: currentUser.id, // Mongoose virtual getter, we can assume it always works
             email: currentUser.email,
-            userName: currentUser.username,
+            username: currentUser.username,
         };
 
         const secret = process.env.JWT_SECRET;

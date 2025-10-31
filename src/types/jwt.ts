@@ -1,7 +1,7 @@
 export interface IJwtPayload {
     userId: string;
     email: string;
-    userName: string;
+    username: string;
 }
 
 export interface ITokenVerificationResult {

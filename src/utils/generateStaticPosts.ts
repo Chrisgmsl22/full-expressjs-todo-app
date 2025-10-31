@@ -174,7 +174,7 @@ export const generateStaticPosts = (): ITask[] => {
         {
             _id: new mongoose.Types.ObjectId().toString(),
             id: new mongoose.Types.ObjectId().toString(),
-            title: "Add pagination to GET /posts",
+            title: "Add pagination to GET /tasks",
             description:
                 "Implement pagination support for task listing endpoint to handle large datasets efficiently.",
             completed: false,
