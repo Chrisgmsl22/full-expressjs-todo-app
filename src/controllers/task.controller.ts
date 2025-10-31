@@ -38,7 +38,7 @@ export class TaskController {
             if (!task) {
                 res.status(404).json({
                     success: false,
-                    error: "Task not found",
+                    message: "Task not found",
                 } as IApiResponse);
                 return;
             }

@@ -41,7 +41,7 @@ describe("authenticateJWT middleware", () => {
                 payload: {
                     userId: "123",
                     email: "test@example.com",
-                    userName: "testUser",
+                    username: "testUser",
                 },
             } as ITokenVerificationResult;
 
@@ -141,7 +141,7 @@ describe("authenticateJWT middleware", () => {
                     mockResponse as Response,
                     mockNext
                 )
-            ).rejects.toThrow("Could not validate token");
+            ).rejects.toThrow("Invalid token");
 
             expect(mockNext).not.toHaveBeenCalled();
         });
@@ -174,7 +174,7 @@ describe("authenticateJWT middleware", () => {
                     mockResponse as Response,
                     mockNext
                 )
-            ).rejects.toThrow("Could not validate token");
+            ).rejects.toThrow("Expired token");
 
             expect(mockNext).not.toHaveBeenCalled();
         });
@@ -189,7 +189,7 @@ describe("authenticateJWT middleware", () => {
                 payload: {
                     userId: "non-existent-user",
                     email: "test@example.com",
-                    userName: "testUser",
+                    username: "testUser",
                 },
             } as ITokenVerificationResult;
 
@@ -228,7 +228,7 @@ describe("authenticateJWT middleware", () => {
                 payload: {
                     userId: "123",
                     email: "example@test.com",
-                    userName: "userName",
+                    username: "userName",
                 },
             } as ITokenVerificationResult;
 

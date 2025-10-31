@@ -283,7 +283,7 @@ describe("AuthService", () => {
 
             expect(decoded.userId).toBe("123456");
             expect(decoded.email).toBe("test@example.com");
-            expect(decoded.userName).toBe("testuser");
+            expect(decoded.username).toBe("testuser");
             expect(decoded.exp).toBeDefined();
             expect(decoded.iat).toBeDefined();
         });
@@ -313,7 +313,7 @@ describe("AuthService", () => {
             const payload: IJwtPayload = {
                 userId: "123",
                 email: "test@example.com",
-                userName: "testuser",
+                username: "testuser",
             };
             const token = jwt.sign(payload, "test-secret-key", {
                 expiresIn: "1h",
@@ -343,7 +343,7 @@ describe("AuthService", () => {
             const payload: IJwtPayload = {
                 userId: "123",
                 email: "test@example.com",
-                userName: "testuser",
+                username: "testuser",
             };
             const expiredToken = jwt.sign(payload, "test-secret-key", {
                 expiresIn: "-1s",
@@ -370,7 +370,7 @@ describe("AuthService", () => {
             const payload: IJwtPayload = {
                 userId: "123",
                 email: "test@example.com",
-                userName: "testuser",
+                username: "testuser",
             };
             // Keep in mind we're defining the env token at the start of this test suite, thats why it will fail
             const token = jwt.sign(payload, "different-secret", {

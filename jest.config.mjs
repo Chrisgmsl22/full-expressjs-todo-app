@@ -1,18 +1,14 @@
 export default {
-    preset: 'ts-jest',
-    testEnvironment: 'node',
-    roots: ['<rootDir>/src'],
-    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
-    moduleFileExtensions: ['ts', 'js', 'json'],
-    collectCoverageFrom: [
-        'src/**/*.ts',
-        '!src/**/*.d.ts',
-        '!src/index.ts',
-    ],
-    coverageDirectory: 'coverage',
+    preset: "ts-jest",
+    testEnvironment: "node",
+    roots: ["<rootDir>/src"],
+    // Only match files ending in .test.ts or .spec.ts (excludes helper files)
+    testMatch: ["**/?(*.)+(spec|test).ts"],
+    moduleFileExtensions: ["ts", "js", "json"],
+    collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/index.ts"],
+    coverageDirectory: "coverage",
     verbose: true,
-}
-
+};
 
 /**
  * 
