@@ -5,4 +5,11 @@ if [ "$branch" = "main" ]; then
   exit 1
 fi
 
+echo "Running Prettier..."
+npm run format:check || {
+  echo "❌ Prettier formatting issues found. Run 'npm run format' to fix."
+  exit 1
+}
+
+echo "Running ESLint (includes console.log check)..."
 npx eslint src --ext .ts

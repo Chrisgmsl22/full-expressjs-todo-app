@@ -66,7 +66,7 @@ export class TaskController {
             if (!title || typeof title !== "string") {
                 res.status(400).json({
                     success: false,
-                    error: "Title is required and must be a string",
+                    message: "Title is required and must be a string",
                 } as IApiResponse);
                 return;
             }
@@ -135,7 +135,7 @@ export class TaskController {
             if (!deletedTask) {
                 res.status(404).json({
                     success: false,
-                    error: "Task not found",
+                    message: "Task not found",
                 } as IApiResponse);
                 return;
             }

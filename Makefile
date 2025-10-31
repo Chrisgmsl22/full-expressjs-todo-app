@@ -1,4 +1,4 @@
-.PHONY: help install build dev start lint clean docker-build docker-up docker-down docker-restart docker-logs docker-clean db-up db-down start-hybrid-dev
+.PHONY: help install build dev start lint lint-only format format-check clean docker-build docker-up docker-down docker-restart docker-logs docker-clean db-up db-down start-hybrid-dev
 
 # Default target - shows help
 help:
@@ -11,8 +11,9 @@ help:
 	@echo "  make build            - Build TypeScript"
 	@echo "  make dev              - Run dev server locally"
 	@echo "  make start            - Start production server"
-	@echo "  make lint             - Run ESLint"
-	@echo "  make lint-fix         - Fix ESLint issues"
+	@echo "  make lint             - Format + lint (auto-fix if needed)"
+	@echo "  make lint-only        - Run ESLint only"
+	@echo "  make format-check     - Check formatting without fixing"
 	@echo "  make clean            - Clean dist and node_modules"
 	@echo ""
 	@echo " Hybrid Development (Recommended):"
@@ -45,11 +46,26 @@ dev:
 start:
 	npm start
 
+# Format check, auto-fix if needed, then lint
 lint:
-	npx eslint .
+	@echo "Checking code formatting..."
+	@npm run format:check || (echo "⚠️  Formatting issues found. Auto-fixing..." && npm run format)
+	@echo "✅ Formatting complete!"
+	@echo ""
+	@echo "🔍 Running ESLint..."
+	@npx eslint src --ext .ts
+	@echo "✅ Linting complete!"
 
-lint-fix:
-	npx eslint . --fix
+# Run ESLint only (no formatting)
+lint-only:
+	@echo "🔍 Running ESLint only..."
+	@npx eslint src --ext .ts
+
+
+# Check formatting without fixing
+format-check:
+	@echo "🔍 Checking formatting..."
+	@npm run format:check
 
 clean:
 	rm -rf dist node_modules
@@ -71,8 +87,8 @@ db-logs:
 
 # You will use this most of the time
 start-hybrid-dev:
-	@echo "🔀 Starting Hybrid Development Mode..."
-	@echo "📦 Starting MongoDB in Docker..."
+	@echo "Starting Hybrid Development Mode..."
+	@echo "Starting MongoDB in Docker..."
 	@make db-up
 	@echo ""
 	@echo " Starting app locally..."
@@ -84,7 +100,7 @@ docker-build:
 	docker-compose build
 
 docker-up:
-	@echo "🐳 Starting all Docker containers..."
+	@echo "Starting all Docker containers..."
 	docker-compose up -d
 	@echo "✅ Containers started!"
 	@echo "📊 View logs: make docker-logs"
@@ -96,9 +112,9 @@ docker-down:
 	@echo "✅ All containers stopped"
 
 docker-restart:
-	@echo "♻️  Restarting Docker containers..."
+	@echo "Restarting Docker containers..."
 	docker-compose restart
-	@echo "✅ Containers restarted!"
+	@echo "Containers restarted!"
 
 
 

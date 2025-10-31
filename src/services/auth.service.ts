@@ -1,10 +1,22 @@
 // Business logic, hashing, validation, etc
 
 import { UserModel } from "../models/user.model";
-import { IJwtPayload, IRegisterRequest, ITokenVerificationResult, IUser, IUserExistsCheck, IUserInput } from "../types";
+import {
+    IJwtPayload,
+    IRegisterRequest,
+    ITokenVerificationResult,
+    IUser,
+    IUserExistsCheck,
+    IUserInput,
+} from "../types";
 import bcrypt from "bcrypt";
-import jwt, { SignOptions } from "jsonwebtoken"
-import { AccountDeactivationError, AuthenticationError, ConflictError, ValidationError } from "../utils";
+import jwt, { SignOptions } from "jsonwebtoken";
+import {
+    AccountDeactivationError,
+    AuthenticationError,
+    ConflictError,
+    ValidationError,
+} from "../utils";
 
 /**
  *
@@ -49,44 +61,46 @@ export class AuthService {
         return await UserModel.findOne({ email });
     }
     public static async findUserById(userId: string): Promise<IUser | null> {
-        return await UserModel.findById(userId)
+        return await UserModel.findById(userId);
     }
 
-    public static async checkUserConflicts(email: string, username: string): Promise<IUserExistsCheck> {
+    public static async checkUserConflicts(
+        email: string,
+        username: string
+    ): Promise<IUserExistsCheck> {
         // Single DB query using $or operator for efficiency
         const existingUser = await UserModel.findOne({
-            $or: [
-                { email: email.toLowerCase() },
-                { username: username }
-            ]
-        })
+            $or: [{ email }, { username: username }],
+        });
 
         if (!existingUser) {
-            return {exists: false}
+            return { exists: false };
         }
-        
+
         // Determine which field conflicts
         if (existingUser.email.toLowerCase() === email.toLowerCase()) {
             return {
                 exists: true,
-                conflictField: 'email',
-                message: 'User with this email already exists'
+                conflictField: "email",
+                message: "User with this email already exists",
             };
         } else {
             return {
                 exists: true,
-                conflictField: 'username', 
-                message: 'Username already exists'
+                conflictField: "username",
+                message: "Username already exists",
             };
         }
     }
 
-    
     public static async createUser(userData: IRegisterRequest): Promise<IUser> {
-        const conflict = await AuthService.checkUserConflicts(userData.email, userData.username)
+        const conflict = await AuthService.checkUserConflicts(
+            userData.email,
+            userData.username
+        );
 
         if (conflict.exists) {
-            throw new ConflictError(conflict.message!) // If we ever get to this point, we know for sure there will be a message
+            throw new ConflictError(conflict.message!); // If we ever get to this point, we know for sure there will be a message
         }
 
         // Validate that the given email is valid
@@ -113,90 +127,99 @@ export class AuthService {
         // Create user object with strict typing
         const userCreateData: IUserInput = {
             username: userData.username,
-            email: userData.email,
+            email: userData.email.toLowerCase(),
             password: hashedPassword,
             createdAt: new Date(),
             isActive: true,
             emailVerified: false,
         };
-        
+
         const newUser = new UserModel(userCreateData);
 
-        return await newUser.save()
+        return await newUser.save();
     }
 
     // Hacky approach for adding compatibility for mongoose's built-in id object
-    
+
     public static generateToken(currentUser: IUser): string {
         const payload: IJwtPayload = {
             userId: currentUser.id, // Mongoose virtual getter, we can assume it always works
             email: currentUser.email,
-            userName: currentUser.username
+            username: currentUser.username,
+        };
+
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error("JWT_SECRET not configured");
         }
 
-        const secret = process.env.JWT_SECRET
-        if (!secret) {
-            throw new Error("JWT_SECRET not configured")
-        }
-        
-        const options: SignOptions = {expiresIn: "1h"}
+        const options: SignOptions = { expiresIn: "1h" };
 
         // Actually generate the token
-        const token = jwt.sign(payload, secret, options)
-        
-        return token
+        const token = jwt.sign(payload, secret, options);
+
+        return token;
     }
 
     public static verifyToken(token: string): ITokenVerificationResult {
-        const secret = process.env.JWT_SECRET
+        const secret = process.env.JWT_SECRET;
         if (!secret) {
-            return {valid: false, error: "JWT_SECRET not configured"}
+            return { valid: false, error: "JWT_SECRET not configured" };
         }
 
         try {
-            const decoded = jwt.verify(token, secret) as IJwtPayload
-            return {valid: true, payload: decoded}
+            const decoded = jwt.verify(token, secret) as IJwtPayload;
+            return { valid: true, payload: decoded };
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                return {valid: false, error: "Token has expired"}
+                return { valid: false, error: "Token has expired" };
             } else if (error instanceof jwt.JsonWebTokenError) {
-                return {valid: false, error: "Invalid token"}
+                return { valid: false, error: "Invalid token" };
             } else {
-                console.error(error)
-                return {valid: false, error: `Token verification failed: ${error}`}
+                console.error(error);
+                return {
+                    valid: false,
+                    error: `Token verification failed: ${error}`,
+                };
             }
         }
     }
 
-    public static async validateLogin(email: string, password: string): Promise<IUser> {
+    public static async validateLogin(
+        email: string,
+        password: string
+    ): Promise<IUser> {
         // 1. Try to find the user
-        const user = await this.findUserByEmail(email)
+        const user = await this.findUserByEmail(email.toLowerCase());
         if (!user) {
-            throw new AuthenticationError("Invalid email or password") // DO NOT reveal which one is wrong for security
+            throw new AuthenticationError("Invalid email or password"); // DO NOT reveal which one is wrong for security
         }
 
-        
         // compare passwords to check if login is valid
-        const isPasswordValid = await this.comparePassword(password, user.password)
-        
+        const isPasswordValid = await this.comparePassword(
+            password,
+            user.password
+        );
+
         if (!isPasswordValid) {
-            throw new AuthenticationError ('Invalid email or password')
+            throw new AuthenticationError("Invalid email or password");
         }
-        
+
         // Check if account is still active
-        if(!user.isActive){
-            throw new AccountDeactivationError("Account has been deactivated")
+        if (!user.isActive) {
+            throw new AccountDeactivationError("Account has been deactivated");
         }
         // At this point, we can assume the user is valid
-        return user as IUser
+        return user as IUser;
     }
 
-    public static logout(): {success: boolean; message: string} {
+    public static logout(): { success: boolean; message: string } {
         // JWT is stateless, so we just return success
         // Client should delete token from localStorage/cookies
         return {
-            success: true, 
-            message: "Logged out successfully!. Please remove token from client"
-        }
+            success: true,
+            message:
+                "Logged out successfully!. Please remove token from client",
+        };
     }
 }

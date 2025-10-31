@@ -15,20 +15,28 @@ export class UserController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const {username, email, password} = req.body
-            const propsMissing = !username || !email || !password
-            const propTypesNotValid = typeof username !== "string" || typeof email !== "string" || typeof password !== "string"
-            if (propsMissing || propTypesNotValid){
+            const { username, email, password } = req.body;
+            const propsMissing = !username || !email || !password;
+            const propTypesNotValid =
+                typeof username !== "string" ||
+                typeof email !== "string" ||
+                typeof password !== "string";
+            if (propsMissing || propTypesNotValid) {
                 res.status(400).json({
                     success: false,
-                    error: "username, email and password are required and must be strings"
-                })
-                return
+                    message:
+                        "username, email and password are required and must be strings",
+                });
+                return;
             }
 
             // If args are valid, we attempt user creation
-            const userCreated = await AuthService.createUser({username: username.toLowerCase(), email: email.toLowerCase(), password})
-            const userJwt = AuthService.generateToken(userCreated)
+            const userCreated = await AuthService.createUser({
+                username: username,
+                email: email.toLowerCase(),
+                password,
+            });
+            const userJwt = AuthService.generateToken(userCreated);
 
             res.status(201).json({
                 success: true,
@@ -37,12 +45,12 @@ export class UserController {
                     id: userCreated.id,
                     username: userCreated.username,
                     email: userCreated.email,
-                    createdAt: userCreated.createdAt
+                    createdAt: userCreated.createdAt,
                 },
-                token: userJwt
-            } as IAuthResponse)
+                token: userJwt,
+            } as IAuthResponse);
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
     // What it should do:
@@ -57,19 +65,24 @@ export class UserController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const {email, password} = req.body
-            const propsMissing = !email || !password
-            const propTypesNotValid = typeof email !== "string" || typeof password !== "string"
-            if (propsMissing || propTypesNotValid){
+            const { email, password } = req.body;
+            const propsMissing = !email || !password;
+            const propTypesNotValid =
+                typeof email !== "string" || typeof password !== "string";
+            if (propsMissing || propTypesNotValid) {
                 res.status(400).json({
                     success: false,
-                    error: "email and password are required and must be strings"
-                })
-                return
+                    message:
+                        "email and password are required and must be strings",
+                });
+                return;
             }
 
-            const validatedUser = await AuthService.validateLogin(email, password)
-            const userJwt = AuthService.generateToken(validatedUser)
+            const validatedUser = await AuthService.validateLogin(
+                email,
+                password
+            );
+            const userJwt = AuthService.generateToken(validatedUser);
 
             res.status(200).json({
                 success: true,
@@ -78,13 +91,12 @@ export class UserController {
                     id: validatedUser.id,
                     username: validatedUser.username,
                     email: validatedUser.email,
-                    createdAt: validatedUser.createdAt
+                    createdAt: validatedUser.createdAt,
                 },
-                token: userJwt
-            } as IAuthResponse)
-        
+                token: userJwt,
+            } as IAuthResponse);
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 
@@ -98,15 +110,12 @@ export class UserController {
         next: NextFunction
     ): Promise<void> {
         try {
-            
-            const logoutRes = AuthService.logout() as IAuthResponse
+            const logoutRes = AuthService.logout() as IAuthResponse;
 
-            res.status(200).json(logoutRes)
+            res.status(200).json(logoutRes);
         } catch (error) {
-            next(error)
+            next(error);
         }
-
-    
     }
 
     // Future-proofing user operations (for now these are defined as empty)

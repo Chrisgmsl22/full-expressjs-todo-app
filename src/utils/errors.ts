@@ -40,6 +40,6 @@ export class AccountDeactivationError extends AppError {
 
 export class UserNotFoundError extends AppError {
     constructor(message: string) {
-        super(message, 404)
+        super(message, 404);
     }
 }

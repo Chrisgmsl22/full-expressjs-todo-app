@@ -52,7 +52,7 @@ app.use(express.json()); // express.json is a middleware
 
 // Mount the routes under /api
 app.use("/api", checkDatabaseConnection, taskRoutes);
-app.use("/api", userRoutes)
+app.use("/api", userRoutes);
 
 // MUST BE LAST
 app.use(errorHandler);

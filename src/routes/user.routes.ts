@@ -9,5 +9,4 @@ userRoutes.post("/auth/login", UserController.login);
 
 userRoutes.post("/auth/logout", UserController.logout);
 
-
-export default userRoutes
+export default userRoutes;
