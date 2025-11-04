@@ -136,6 +136,8 @@ setup-hybrid: install build db-up
 # ===== Testing (for future) =====
 test:
 	npm run test
+test-coverage:
+	npm run test -- --coverage
 
 test-docker:
 	docker-compose run app npm test
