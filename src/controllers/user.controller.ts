@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
-import { IAuthResponse } from "../types";
+import { IApiResponse, IAuthResponse } from "../types";
 
 export class UserController {
     // What it should do:
@@ -26,7 +26,7 @@ export class UserController {
                     success: false,
                     message:
                         "username, email and password are required and must be strings",
-                });
+                } as IApiResponse);
                 return;
             }
 
@@ -74,7 +74,7 @@ export class UserController {
                     success: false,
                     message:
                         "email and password are required and must be strings",
-                });
+                } as IApiResponse);
                 return;
             }
 
@@ -110,7 +110,7 @@ export class UserController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const logoutRes = AuthService.logout() as IAuthResponse;
+            const logoutRes = AuthService.logout();
 
             res.status(200).json(logoutRes);
         } catch (error) {

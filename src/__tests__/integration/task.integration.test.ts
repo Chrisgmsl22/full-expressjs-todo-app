@@ -230,7 +230,7 @@ describe("Task API Integration tests", () => {
                 .expect(404);
 
             expect(res.body.success).toBe(false);
-            expect(res.body.error).toBe("Task not found");
+            expect(res.body.message).toBe("Task not found");
         });
 
         it("Should return 400 for invalid task ID format", async () => {
@@ -330,7 +330,7 @@ describe("Task API Integration tests", () => {
                 .expect(404);
 
             expect(res.body.success).toBe(false);
-            expect(res.body.error).toBe("Task not found");
+            expect(res.body.message).toBe("Task not found");
         });
 
         it("Should return 400 for invalid task ID format", async () => {

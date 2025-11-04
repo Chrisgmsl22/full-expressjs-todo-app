@@ -2,6 +2,7 @@
 
 import { UserModel } from "../models/user.model";
 import {
+    IApiResponse,
     IJwtPayload,
     IRegisterRequest,
     ITokenVerificationResult,
@@ -213,7 +214,7 @@ export class AuthService {
         return user as IUser;
     }
 
-    public static logout(): { success: boolean; message: string } {
+    public static logout(): IApiResponse {
         // JWT is stateless, so we just return success
         // Client should delete token from localStorage/cookies
         return {
