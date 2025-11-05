@@ -4,13 +4,14 @@ import { TaskService } from "../services/task.service";
 
 export class TaskController {
     public static async getAllTasks(
-        _req: Request,
+        req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
             // 1. Call service to get all tasks
-            const tasks = await TaskService.getAllTasks();
+            const userId = req.user!.id; // This will be from the authenticated token
+            const tasks = await TaskService.getAllTasks(userId);
 
             // 2. Return formatted response
             res.status(200).json({
@@ -32,7 +33,8 @@ export class TaskController {
             const { id } = req.params;
 
             // 1. Call service to get task
-            const task = await TaskService.getTaskById(id);
+            const userId = req.user!.id;
+            const task = await TaskService.getTaskById(id, userId);
 
             // 2. Handle not found case
             if (!task) {
@@ -60,6 +62,7 @@ export class TaskController {
         next: NextFunction
     ): Promise<void> {
         try {
+            const userId = req.user!.id;
             const { title, description } = req.body;
 
             // 1. Basic input validation (HTTP layer concern)
@@ -72,10 +75,13 @@ export class TaskController {
             }
 
             // 2. Call service to create task
-            const newTask = await TaskService.createTask({
-                title,
-                description,
-            });
+            const newTask = await TaskService.createTask(
+                {
+                    title,
+                    description,
+                },
+                userId
+            );
 
             // 3. Return formatted response
             res.status(201).json({
@@ -94,11 +100,16 @@ export class TaskController {
         next: NextFunction
     ): Promise<void> {
         try {
+            const userId = req.user!.id;
             const { id } = req.params;
             const updateData = req.body;
 
             // 1. Call service to update task
-            const updatedTask = await TaskService.updateTask(id, updateData);
+            const updatedTask = await TaskService.updateTask(
+                id,
+                updateData,
+                userId
+            );
 
             // 2. Handle not found case
             if (!updatedTask) {
@@ -126,10 +137,11 @@ export class TaskController {
         next: NextFunction
     ): Promise<void> {
         try {
+            const userId = req.user!.id;
             const { id } = req.params;
 
             // 1. Call service to delete task
-            const deletedTask = await TaskService.deleteTask(id);
+            const deletedTask = await TaskService.deleteTask(id, userId);
 
             // 2. Handle not found case
             if (!deletedTask) {

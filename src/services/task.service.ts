@@ -4,19 +4,23 @@ import mongoose from "mongoose";
 import { ValidationError } from "../utils";
 
 export class TaskService {
-    public static async getAllTasks(): Promise<ITask[]> {
-        return await Task.find();
+    public static async getAllTasks(userId: string): Promise<ITask[]> {
+        return await Task.find({ userId }); // We need to filter by userId
     }
 
-    public static async getTaskById(id: string): Promise<ITask | null> {
+    public static async getTaskById(
+        id: string,
+        userId: string
+    ): Promise<ITask | null> {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw new ValidationError("Invalid ID format");
         }
-        return await Task.findById(id);
+        return await Task.findOne({ _id: id, userId });
     }
 
     public static async createTask(
-        taskData: ICreateTaskRequest
+        taskData: ICreateTaskRequest,
+        userId: string
     ): Promise<ITask> {
         // Business logic validation
         if (!taskData.title || !taskData.title.trim()) {
@@ -27,6 +31,7 @@ export class TaskService {
             title: taskData.title.trim(),
             description: taskData.description,
             completed: false,
+            userId, // This user created this task, and should be the only one seeing this task
         });
 
         return await newTask.save();
@@ -34,7 +39,8 @@ export class TaskService {
 
     public static async updateTask(
         id: string,
-        updateData: IUpdateTaskRequest
+        updateData: IUpdateTaskRequest,
+        userId: string
     ): Promise<ITask | null> {
         if (!id) {
             throw new ValidationError("Id is required");
@@ -43,17 +49,20 @@ export class TaskService {
             throw new ValidationError("Invalid ID format");
         }
 
-        return await Task.findByIdAndUpdate(id, updateData, {
+        return await Task.findOneAndUpdate({ _id: id, userId }, updateData, {
             new: true,
             runValidators: true,
         });
     }
 
-    public static async deleteTask(id: string): Promise<ITask | null> {
+    public static async deleteTask(
+        id: string,
+        userId: string
+    ): Promise<ITask | null> {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw new ValidationError("Invalid ID format");
         }
 
-        return await Task.findByIdAndDelete(id);
+        return await Task.findOneAndDelete({ _id: id, userId });
     }
 }
