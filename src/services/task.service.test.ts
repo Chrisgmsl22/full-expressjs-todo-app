@@ -7,6 +7,8 @@ import { TaskService } from "./task.service";
 // Mock the TaskModel to avoid database calls
 jest.mock("../models/task.model");
 
+const generateMongoDBId = () => new mongoose.Types.ObjectId().toString();
+
 describe("TaskService", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -18,10 +20,11 @@ describe("TaskService", () => {
 
     describe("getAllTasks", () => {
         it("Should return all current posts", async () => {
+            const userId = generateMongoDBId();
             const mockTasks = generateStaticPosts();
             (TaskModel.find as jest.Mock).mockResolvedValue(mockTasks); // Will have many posts
 
-            const res = await TaskService.getAllTasks();
+            const res = await TaskService.getAllTasks(userId);
 
             expect(res).toBeTruthy();
             expect(TaskModel.find).toHaveBeenCalledTimes(1);
@@ -39,8 +42,8 @@ describe("TaskService", () => {
 
         it("Should return empty array if there are no posts", async () => {
             (TaskModel.find as jest.Mock).mockResolvedValue([]);
-
-            const res = await TaskService.getAllTasks();
+            const userId = generateMongoDBId();
+            const res = await TaskService.getAllTasks(userId);
 
             expect(res).toHaveLength(0);
             expect(TaskModel.find).toHaveBeenCalledTimes(1);
@@ -50,6 +53,7 @@ describe("TaskService", () => {
     describe("getTaskById", () => {
         it("Should return existing task", async () => {
             const id = new mongoose.Types.ObjectId().toString();
+            const userId = generateMongoDBId();
             const mockTask = {
                 _id: id,
                 title: "Work on unit testing!",
@@ -57,13 +61,14 @@ describe("TaskService", () => {
                 completed: false,
                 createdAt: new Date(),
                 updatedAt: new Date(),
+                userId,
             } as ITask;
-            (TaskModel.findById as jest.Mock).mockResolvedValue(mockTask);
+            (TaskModel.findOne as jest.Mock).mockResolvedValue(mockTask);
 
-            const existingTask = await TaskService.getTaskById(id);
+            const existingTask = await TaskService.getTaskById(id, userId);
 
             expect(existingTask).toBeDefined();
-            expect(TaskModel.findById).toHaveBeenCalled();
+            expect(TaskModel.findOne).toHaveBeenCalled();
             expect(existingTask?._id).toBe(id);
             expect(existingTask).toMatchObject({
                 _id: expect.any(String),
@@ -71,27 +76,27 @@ describe("TaskService", () => {
                 completed: expect.any(Boolean),
                 createdAt: expect.any(Date),
                 updatedAt: expect.any(Date),
+                userId: expect.any(String),
             } as ITask);
         });
 
         it("Should return null if no ID is found", async () => {
-            (TaskModel.findById as jest.Mock).mockResolvedValue(null);
-
+            (TaskModel.findOne as jest.Mock).mockResolvedValue(null);
+            const userId = generateMongoDBId();
             const id = new mongoose.Types.ObjectId().toString();
-            const res = await TaskService.getTaskById(id);
+            const res = await TaskService.getTaskById(id, userId);
 
             expect(res).toBeNull();
         });
 
         it("Should throw ValidationError for invalid ID", async () => {
-            (TaskModel.findById as jest.Mock).mockResolvedValue(null); // Doesn't matter the result in this case
-
-            await expect(TaskService.getTaskById("invalidID")).rejects.toThrow(
-                ValidationError
-            );
-            await expect(TaskService.getTaskById("invalidID")).rejects.toThrow(
-                "Invalid ID format"
-            );
+            const userId = generateMongoDBId();
+            await expect(
+                TaskService.getTaskById("invalidID", userId)
+            ).rejects.toThrow(ValidationError);
+            await expect(
+                TaskService.getTaskById("invalidID", userId)
+            ).rejects.toThrow("Invalid ID format");
         });
     });
 
@@ -102,6 +107,7 @@ describe("TaskService", () => {
                 title: "New task",
                 description: "Unit testing the create task service method",
             } as ICreateTaskRequest;
+            const userId = generateMongoDBId();
 
             // What we expect to get back after saving
             const mockSavedTask = {
@@ -110,6 +116,7 @@ describe("TaskService", () => {
                 description: "Unit testing the create task service method",
                 completed: false,
                 createdAt: new Date(),
+                userId,
             } as ITask;
 
             // Create a mock save function
@@ -120,7 +127,7 @@ describe("TaskService", () => {
                 save: mockSave,
             }));
 
-            const res = await TaskService.createTask(taskData);
+            const res = await TaskService.createTask(taskData, userId);
 
             expect(res).toBeDefined();
             expect(res.title).toBe("New task");
@@ -129,11 +136,12 @@ describe("TaskService", () => {
         });
 
         it("Should return ValidationError when title it not passed in", async () => {
+            const userId = generateMongoDBId();
             await expect(
-                TaskService.createTask({} as ICreateTaskRequest)
+                TaskService.createTask({} as ICreateTaskRequest, userId)
             ).rejects.toThrow(ValidationError);
             await expect(
-                TaskService.createTask({} as ICreateTaskRequest)
+                TaskService.createTask({} as ICreateTaskRequest, userId)
             ).rejects.toThrow("Title is required");
             expect(TaskModel).not.toHaveBeenCalled();
         });
@@ -142,6 +150,7 @@ describe("TaskService", () => {
     describe("updateTask", () => {
         it("Should update existing task", async () => {
             const id = new mongoose.Types.ObjectId().toString();
+            const userId = generateMongoDBId();
             const updateData = {
                 title: "Title updated",
                 description: "Description updated",
@@ -155,62 +164,71 @@ describe("TaskService", () => {
                 completed: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
+                userId,
             };
 
-            (TaskModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(
+            (TaskModel.findOneAndUpdate as jest.Mock).mockResolvedValue(
                 mockUpdatedTask
             );
 
-            const res = await TaskService.updateTask(id, updateData);
+            const res = await TaskService.updateTask(id, updateData, userId);
 
             expect(res).toBeDefined();
             expect(res?.title).toBe("Title updated");
             expect(res?.completed).toBe(true);
-            expect(TaskModel.findByIdAndUpdate).toHaveBeenCalledWith(
-                id,
+            expect(TaskModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: id, userId },
                 updateData,
                 {
                     new: true,
                     runValidators: true,
                 }
             );
-            expect(TaskModel.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+            expect(TaskModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
         });
 
         it("Should throw a ValidationError when id is not given in the function", async () => {
+            const userId = generateMongoDBId();
             await expect(
-                TaskService.updateTask("", {} as IUpdateTaskRequest)
+                TaskService.updateTask("", {} as IUpdateTaskRequest, userId)
             ).rejects.toThrow(ValidationError);
             await expect(
-                TaskService.updateTask("", {} as IUpdateTaskRequest)
+                TaskService.updateTask("", {} as IUpdateTaskRequest, userId)
             ).rejects.toThrow("Id is required");
         });
 
         it("Should throw a ValidationError when ID is invalid", async () => {
+            const userId = generateMongoDBId();
             await expect(
-                TaskService.updateTask("123", {} as IUpdateTaskRequest)
+                TaskService.updateTask("123", {} as IUpdateTaskRequest, userId)
             ).rejects.toThrow(ValidationError);
             await expect(
-                TaskService.updateTask("123", {} as IUpdateTaskRequest)
+                TaskService.updateTask("123", {} as IUpdateTaskRequest, userId)
             ).rejects.toThrow("Invalid ID format");
         });
 
         it("Should return null when task not found", async () => {
+            const userId = generateMongoDBId();
             const taskID = new mongoose.Types.ObjectId().toString();
             const updatedData = {
                 title: "Updated title",
             } as IUpdateTaskRequest;
 
-            (TaskModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(null);
+            (TaskModel.findOneAndUpdate as jest.Mock).mockResolvedValue(null);
 
-            const res = await TaskService.updateTask(taskID, updatedData);
+            const res = await TaskService.updateTask(
+                taskID,
+                updatedData,
+                userId
+            );
 
             expect(res).toBeNull();
-            expect(TaskModel.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+            expect(TaskModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
         });
 
         it("Should update only provided fields (partial update)", async () => {
             const taskId = "507f1f77bcf86cd799439011";
+            const userId = generateMongoDBId();
             const updateData = { completed: true }; // Only updating completed
 
             const mockTask = {
@@ -218,18 +236,23 @@ describe("TaskService", () => {
                 title: "Original Title", // Should stay the same
                 description: "Original Description",
                 completed: true, // Updated
+                userId,
             };
 
-            (TaskModel.findByIdAndUpdate as jest.Mock).mockResolvedValue(
+            (TaskModel.findOneAndUpdate as jest.Mock).mockResolvedValue(
                 mockTask
             );
 
-            const result = await TaskService.updateTask(taskId, updateData);
+            const result = await TaskService.updateTask(
+                taskId,
+                updateData,
+                userId
+            );
 
             expect(result?.title).toBe("Original Title");
             expect(result?.completed).toBe(true);
-            expect(TaskModel.findByIdAndUpdate).toHaveBeenCalledWith(
-                taskId,
+            expect(TaskModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: taskId, userId },
                 { completed: true }, // Only this was sent
                 { new: true, runValidators: true }
             );
@@ -239,6 +262,7 @@ describe("TaskService", () => {
     describe("deleteTask", () => {
         it("Should delete task", async () => {
             const taskId = new mongoose.Types.ObjectId().toString();
+            const userId = generateMongoDBId();
 
             const taskDeletedMock = {
                 _id: taskId,
@@ -247,42 +271,47 @@ describe("TaskService", () => {
                 completed: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                userId: "someUserId",
+                userId,
             } as ITask;
 
-            (TaskModel.findByIdAndDelete as jest.Mock).mockResolvedValue(
+            (TaskModel.findOneAndDelete as jest.Mock).mockResolvedValue(
                 taskDeletedMock
             );
 
-            const res = await TaskService.deleteTask(taskId);
+            const res = await TaskService.deleteTask(taskId, userId);
 
             expect(res).toBeDefined();
             expect(res?._id).toBe(taskId);
             expect(res?.title).toBe("Old task");
-            expect(TaskModel.findByIdAndDelete).toHaveBeenCalledTimes(1);
-            // expect(TaskModel.findByIdAndDelete).toHaveBeenCalledWith()
+            expect(TaskModel.findOneAndDelete).toHaveBeenCalledTimes(1);
+            expect(TaskModel.findOneAndDelete).toHaveBeenCalledWith({
+                _id: taskId,
+                userId,
+            });
         });
 
         it("Should throw ValidationError for invalid ID", async () => {
             const invalidId = "invalid-id";
+            const userId = generateMongoDBId();
 
-            await expect(TaskService.deleteTask(invalidId)).rejects.toThrow(
-                ValidationError
-            );
-            await expect(TaskService.deleteTask(invalidId)).rejects.toThrow(
-                "Invalid ID format"
-            );
+            await expect(
+                TaskService.deleteTask(invalidId, userId)
+            ).rejects.toThrow(ValidationError);
+            await expect(
+                TaskService.deleteTask(invalidId, userId)
+            ).rejects.toThrow("Invalid ID format");
         });
 
         it("Should return null for an ID not found", async () => {
             const id = new mongoose.Types.ObjectId().toString();
+            const userId = generateMongoDBId();
 
-            (TaskModel.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
+            (TaskModel.findOneAndDelete as jest.Mock).mockResolvedValue(null);
 
-            const res = await TaskService.deleteTask(id);
+            const res = await TaskService.deleteTask(id, userId);
 
             expect(res).toBeNull();
-            expect(TaskModel.findByIdAndDelete).toHaveBeenCalledTimes(1);
+            expect(TaskModel.findOneAndDelete).toHaveBeenCalledTimes(1);
         });
     });
 });

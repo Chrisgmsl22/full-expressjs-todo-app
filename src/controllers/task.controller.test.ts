@@ -2,10 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import { generateStaticPosts } from "../utils";
 import { TaskService } from "../services/task.service";
 import { TaskController } from "./task.controller";
-import { IApiResponse, ITask } from "../types";
+import { IApiResponse, ITask, IUser } from "../types";
+import mongoose from "mongoose";
 
 // We need to Mock the TaskService
 jest.mock("../services/task.service");
+
+const generateMongoDBId = () => new mongoose.Types.ObjectId().toString();
 
 describe("TaskController", () => {
     let mockReq: Partial<Request>;
@@ -15,10 +18,21 @@ describe("TaskController", () => {
     let jsonMock: jest.Mock;
     let statusMock: jest.Mock;
 
+    const mockUser: IUser = {
+        id: generateMongoDBId(),
+        username: "mockUsername",
+        email: "mockEmail@test.com",
+        password: "#ThisShouldBeAHash",
+        createdAt: new Date(),
+        isActive: false,
+        emailVerified: false,
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
 
         mockReq = {};
+        mockReq.user = mockUser;
         jsonMock = jest.fn();
         statusMock = jest.fn().mockReturnValue({ json: jsonMock });
 
@@ -307,7 +321,8 @@ describe("TaskController", () => {
 
             expect(TaskService.deleteTask).toHaveBeenCalledTimes(1);
             expect(TaskService.deleteTask).toHaveBeenCalledWith(
-                mockReq.params.id
+                mockReq.params.id,
+                mockUser.id
             );
             expect(statusMock).toHaveBeenCalledWith(204);
         });
@@ -325,7 +340,8 @@ describe("TaskController", () => {
 
             expect(TaskService.deleteTask).toHaveBeenCalledTimes(1);
             expect(TaskService.deleteTask).toHaveBeenCalledWith(
-                mockReq.params.id
+                mockReq.params.id,
+                mockUser.id
             );
             expect(statusMock).toHaveBeenCalledWith(404);
             expect(jsonMock).toHaveBeenCalledWith({
@@ -348,7 +364,8 @@ describe("TaskController", () => {
 
             expect(TaskService.deleteTask).toHaveBeenCalledTimes(1);
             expect(TaskService.deleteTask).toHaveBeenCalledWith(
-                mockReq.params.id
+                mockReq.params.id,
+                mockUser.id
             );
             expect(mockNext).toHaveBeenCalled();
             expect(statusMock).not.toHaveBeenCalled();
