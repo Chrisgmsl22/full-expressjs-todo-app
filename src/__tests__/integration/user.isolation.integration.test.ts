@@ -140,14 +140,15 @@ describe("User Isolation & Authorization", () => {
             expect(res.body.data[0]._id).toBe(userBTaskId);
         });
 
-        it("Should return empty arrat if user has no tasks", async () => {
+        it("Should return empty array if user has no tasks", async () => {
             const res = await request(app)
                 .post("/api/auth/register")
                 .send({
                     username: "usernameC",
                     email: "usercemail@test.com",
                     password: "WeWork441$",
-                } as IRegisterRequest);
+                } as IRegisterRequest)
+                .expect(201);
 
             const userCToken = res.body.token;
             const getRes = await request(app)
