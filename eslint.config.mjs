@@ -40,6 +40,8 @@ export default [
         //  Allow all console methods in specific files where it's intentional
         files: [
             "src/index.ts", // Server startup logs
+            "src/config/db.config.ts", // Database connection logs
+            "src/config/redis.config.ts", // Redis connection logs
             "src/middleware/errorHandler.ts", // Error middleware
             "src/__tests__/**/*.ts", // All test files
         ],

@@ -18,7 +18,7 @@ export const cacheMiddleware = (keyPrefix: string, ttl = 300) => {
             const cacheKey = `${keyPrefix}:${userId}:${req.originalUrl}`;
 
             // Try to get cached data
-            const cachedData = await RedisHelper.get(cacheKey);
+            const cachedData = await RedisHelper.get<JsonValue>(cacheKey);
 
             if (cachedData) {
                 console.info("Cache HIT: ", cacheKey);
@@ -61,6 +61,7 @@ export const cacheMiddleware = (keyPrefix: string, ttl = 300) => {
 };
 
 // Invalidate cache middleware - clears cache after mutations
+// Example: If we create a new task, then we need to delete the "allTasks" previously stored, because its old data now
 export const invalidateCache = (pattern: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {

@@ -2,10 +2,10 @@ import express from "express";
 import taskRoutes from "./routes/task.routes";
 import { errorHandler } from "./middleware/errorHandler";
 import dotenv from "dotenv";
-import mongoose, { ConnectOptions } from "mongoose";
-import { Task } from "./models/task.model";
+import mongoose from "mongoose";
 import { checkDatabaseConnection } from "./middleware/checkDatabaseConnection";
 import userRoutes from "./routes/user.routes";
+import { connectDB, redisClient, testDatabaseConnection } from "./config";
 
 // Only load this if we're not in docker
 if (!process.env.DOCKER_ENV) {
@@ -14,40 +14,7 @@ if (!process.env.DOCKER_ENV) {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const mongoUri =
-    process.env.MONGO_URI || "mongodb://localhost:27017/todo-app-db";
 
-const mongoOptions: ConnectOptions = {
-    // These options help with connection stability and debugging
-    maxPoolSize: 10, // Maximum number of connections in the pool
-    serverSelectionTimeoutMS: 5000, // Timeout for server selection
-    socketTimeoutMS: 45000, // Timeout for socket operations
-    //bufferMaxEntries: 0, // Disable mongoose buffering
-};
-
-// Connecting to the DB
-const connectDB = async () => {
-    try {
-        await mongoose.connect(mongoUri, mongoOptions);
-        console.log("✅ MongoDB connected successfully!");
-        console.log(`📍 Database: ${mongoUri}`);
-    } catch (err) {
-        console.error("❌ MongoDB connection failed:");
-        console.error("Error details:", err);
-        process.exit(1); // Exit if we can't connect to database
-    }
-};
-
-// Connection event listeners for debugging
-mongoose.connection.on("error", (err) => {
-    console.error("❌ MongoDB connection error:", err);
-});
-
-mongoose.connection.on("disconnected", () => {
-    console.log("⚠️  MongoDB disconnected");
-});
-
-connectDB();
 app.use(express.json()); // express.json is a middleware
 
 // Mount the routes under /api
@@ -57,27 +24,40 @@ app.use("/api", userRoutes);
 // MUST BE LAST
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Test database operations after connection
-const testDatabaseConnection = async () => {
+// Start server
+const startServer = async () => {
     try {
-        // Wait for connection to be ready
-        if (mongoose.connection.readyState === 1) {
-            const posts = await Task.find();
-            console.log(
-                "📊 Database test successful! Found posts:",
-                posts.length
-            );
-        } else {
-            console.log("⏳ Waiting for database connection...");
-        }
+        await connectDB();
+        await redisClient.ping();
+        console.info("Redis is ready");
+
+        // Start Express server
+        app.listen(PORT, () => {
+            console.log(`Server running on http://localhost:${PORT}`);
+        });
+        await testDatabaseConnection();
     } catch (error) {
-        console.error("❌ Database test failed:", error);
+        console.error("Failed to start server: ", error);
+        process.exit(1);
     }
 };
 
-// Test after a short delay to ensure connection is established
-setTimeout(testDatabaseConnection, 1000);
+startServer(); // We don't use await because we are not inside an async function
+
+// Graceful shutdown
+const gracefulShutdown = async (): Promise<void> => {
+    console.log("\n⏳ Shutting down gracefully...");
+    try {
+        await redisClient.quit();
+        await mongoose.connection.close();
+        console.log("✅ Connections closed");
+        process.exit(0);
+    } catch (error) {
+        console.error("❌ Error during shutdown:", error);
+        process.exit(1);
+    }
+};
+
+// Handle shutdown signals
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
