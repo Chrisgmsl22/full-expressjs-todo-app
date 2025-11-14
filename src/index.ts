@@ -27,17 +27,29 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
     try {
+        // Connect to MongoDB (required)
         await connectDB();
-        await redisClient.ping();
-        console.info("Redis is ready");
+
+        // Try to connect to Redis (optional - graceful degradation)
+        try {
+            await redisClient.ping();
+            console.info("Redis is ready - caching enabled");
+        } catch {
+            console.warn(
+                "⚠️  Redis unavailable - running without cache (degraded mode)"
+            );
+            console.warn("   App will function normally, just without caching");
+            // Don't exit - app can run without Redis
+        }
 
         // Start Express server
         app.listen(PORT, () => {
             console.log(`Server running on http://localhost:${PORT}`);
         });
+
         await testDatabaseConnection();
     } catch (error) {
-        console.error("Failed to start server: ", error);
+        console.error("❌ Failed to start server: ", error);
         process.exit(1);
     }
 };
@@ -48,7 +60,14 @@ startServer(); // We don't use await because we are not inside an async function
 const gracefulShutdown = async (): Promise<void> => {
     console.log("\n⏳ Shutting down gracefully...");
     try {
-        await redisClient.quit();
+        // Try to close Redis connection (if it was connected)
+        try {
+            await redisClient.quit();
+        } catch {
+            // Redis wasn't connected, that's fine
+        }
+
+        // Close MongoDB connection (required)
         await mongoose.connection.close();
         console.log("✅ Connections closed");
         process.exit(0);

@@ -199,24 +199,32 @@ The app is deployed to **Render.com** at:
     - Connect your GitHub repository
     - Choose "Docker" as runtime
     - Add environment variables:
-        - `MONGO_URI` - Your Atlas connection string
-        - `JWT_SECRET` - Random secure string
-        - `PORT` - 3000
+        - `MONGO_URI` - Your Atlas connection string (required)
+        - `JWT_SECRET` - Random secure string (required)
+        - `PORT` - 3000 (optional)
 
-3. **Click Deploy** 🚀
+**Note**: Redis is optional. The app will run in "degraded mode" without caching if Redis is unavailable. All features work normally, just without performance improvements from caching.
 
 ---
 
 ## Environment Variables
 
-| Variable     | Description                   | Example                                 |
-| ------------ | ----------------------------- | --------------------------------------- |
-| `MONGO_URI`  | MongoDB connection string     | `mongodb://localhost:27017/todo-app-db` |
-| `REDIS_HOST` | Redis host                    | `localhost`                             |
-| `REDIS_PORT` | Redis port                    | `6379`                                  |
-| `JWT_SECRET` | Secret key for JWT signing    | `your-super-secret-key`                 |
-| `PORT`       | Server port                   | `3000`                                  |
-| `DOCKER_ENV` | Set by Docker (auto-detected) | `true`                                  |
+| Variable         | Description                       | Required | Example                                 |
+| ---------------- | --------------------------------- | -------- | --------------------------------------- |
+| `MONGO_URI`      | MongoDB connection string         | ✅ Yes   | `mongodb://localhost:27017/todo-app-db` |
+| `JWT_SECRET`     | Secret key for JWT signing        | ✅ Yes   | `your-super-secret-key`                 |
+| `REDIS_URL`      | Redis connection URL (production) | ❌ No    | `redis://red-xxx.render.internal:6379`  |
+| `REDIS_HOST`     | Redis host (local dev)            | ❌ No    | `localhost`                             |
+| `REDIS_PORT`     | Redis port (local dev)            | ❌ No    | `6379`                                  |
+| `REDIS_PASSWORD` | Redis password (if required)      | ❌ No    | `your-redis-password`                   |
+| `PORT`           | Server port                       | ❌ No    | `3000`                                  |
+| `DOCKER_ENV`     | Set by Docker (auto-detected)     | ❌ No    | `true`                                  |
+
+**Redis Configuration:**
+
+- **Production**: Use `REDIS_URL` (full connection string from Render, Redis Cloud, etc.)
+- **Local Dev**: Use `REDIS_HOST` + `REDIS_PORT` (defaults to `localhost:6379`)
+- If Redis is unavailable, app runs without caching (graceful degradation)
 
 ---
 
