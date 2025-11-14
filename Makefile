@@ -68,16 +68,16 @@ stop:
 
 # ===== Testing =====
 run-tests:
-	@echo "Running all tests..."
+	@echo "Running all tests"
 	@npm test
 
 run-unit-tests:
-	@echo "Running unit tests..."
-	@npm test -- --watchAll=false --testPathIgnorePatterns="integration"
+	@npm run test:unit
 
 run-intg-tests:
-	@echo "Running integration tests..."
-	@npm test -- --watchAll=false --testPathPatterns="integration"
+	@echo "Running integration tests (requires Redis running)..."
+	@echo "   Make sure 'make dev' is running first!"
+	@npm run test:integration
 
 
 # ===== Code Quality =====

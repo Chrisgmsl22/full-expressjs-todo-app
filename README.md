@@ -14,10 +14,12 @@ A full-featured backend API built with Express.js, TypeScript, MongoDB, JWT auth
 
 - **RESTful API** with Express.js and TypeScript
 - **MongoDB** with Mongoose ODM (local + Atlas cloud)
+- **Redis Caching** for improved performance
 - **JWT Authentication** with bcrypt password hashing
 - **Docker & Docker Compose** for containerized development
 - **Makefile** for easy command management
-- **Testing** with Jest and Supertest (in progress)
+- **Comprehensive Testing** with Jest and Supertest (Unit + Integration)
+- **CI/CD Pipeline** with GitHub Actions
 - **Deployed** to Render.com
 - **ESLint** for code quality
 - **Environment-based** configuration
@@ -77,24 +79,18 @@ JWT_SECRET=your-super-secret-jwt-key
 PORT=3000
 ```
 
-### 4. Start MongoDB with Docker
+### 4. Build the setup
 
 ```bash
-make db-up
+make setup
 ```
 
-This starts MongoDB in a Docker container on port 27017.
+This will install all dependencies and build the project
 
 ### 5. Run the development server
 
 ```bash
 make dev
-```
-
-### (You can also start your local environment with just one command)
-
-```bash
-make start-hybrid-dev
 ```
 
 The API will be available at `http://localhost:3000` 🎉
@@ -108,41 +104,58 @@ curl http://localhost:3000/api/
 # Or use Postman/Insomnia
 ```
 
----
-
-## Development Workflow
-
-### Recommended: Local App + Docker Database (Hybrid)
-
-This gives you fast TypeScript hot-reload with isolated database:
-
-```bash
-
-make start-hybrid-dev
-
-```
-
-### Full Docker Setup
-
-Run everything in Docker:
-
-```bash
-make setup-docker
-```
-
-This starts both the app and MongoDB in containers.
-
----
-
 ## Testing
 
-Run the test suite with Jest:
+This project has comprehensive test coverage with both **unit tests** and **integration tests**.
+
+### Test Architecture
+
+- **Unit Tests**: Mock external dependencies (Redis, etc.) for fast, isolated testing
+- **Integration Tests**: Use real Redis and MongoDB to test realistic scenarios
+
+### Prerequisites for Integration Tests
+
+Integration tests require **real Redis** running locally:
 
 ```bash
-# Run all tests
-make test
-
+# Start Redis with Docker (REQUIRED before running integration tests)
+make dev  # Starts both MongoDB and Redis
 ```
+
+### Running Tests
+
+```bash
+# Run ALL tests (unit + integration)
+make run-tests
+
+# Run only unit tests (fast, no dependencies)
+make run-unit-tests
+
+# Run only integration tests (requires Redis & MongoDB)
+make run-intg-tests
+
+# Run with coverage
+npm test -- --coverage --watchAll=false
+
+# Run specific test file
+npm test task.integration.test.ts
+```
+
+## It is highly recommended to use the "Jest runner" extension, which will allow you to run individual tests using the UI
+
+### Test Types
+
+| Test Type       | Mocks Used | Real Services        | Speed  | When to Use           |
+| --------------- | ---------- | -------------------- | ------ | --------------------- |
+| **Unit**        | Redis Mock | None                 | Fast   | Test logic/middleware |
+| **Integration** | None       | Real Redis + MongoDB | Slower | Test API endpoints    |
+
+### Important Notes
+
+- ⚠️ **Integration tests will fail** if Redis is not running
+- ✅ **Unit tests** work standalone (no dependencies)
+- Always run `make dev` before integration tests locally
+- CI/CD automatically spins up Redis service containers
 
 ---
 
@@ -199,6 +212,8 @@ The app is deployed to **Render.com** at:
 | Variable     | Description                   | Example                                 |
 | ------------ | ----------------------------- | --------------------------------------- |
 | `MONGO_URI`  | MongoDB connection string     | `mongodb://localhost:27017/todo-app-db` |
+| `REDIS_HOST` | Redis host                    | `localhost`                             |
+| `REDIS_PORT` | Redis port                    | `6379`                                  |
 | `JWT_SECRET` | Secret key for JWT signing    | `your-super-secret-key`                 |
 | `PORT`       | Server port                   | `3000`                                  |
 | `DOCKER_ENV` | Set by Docker (auto-detected) | `true`                                  |
@@ -211,10 +226,12 @@ The app is deployed to **Render.com** at:
 - **Framework**: Express.js 5
 - **Language**: TypeScript 5.8
 - **Database**: MongoDB with Mongoose
+- **Caching**: Redis (ioredis)
 - **Authentication**: JWT + bcrypt
-- **Testing**: Jest + Supertest
+- **Testing**: Jest + Supertest (Unit + Integration)
 - **Containerization**: Docker + Docker Compose
 - **Deployment**: Render.com
+- **CI/CD**: GitHub Actions
 - **Code Quality**: ESLint + Husky
 
 ---
@@ -228,8 +245,10 @@ This is a learning project built following a structured curriculum:
 - ✅ **Phase 3**: Authentication & security
 - ✅ **Phase 4**: Docker containerization
 - ✅ **Phase 5**: Cloud deployment
-- 🚧 **Phase 6**: Testing (in progress)
-- 📋 **Phase 7**: Advanced features (caching, pagination, etc.)
+- ✅ **Phase 6**: Testing (Unit + Integration)
+- ✅ **Phase 7**: CI/CD Pipeline (GitHub Actions)
+- ✅ **Phase 8**: Redis Caching
+- 🚧 **Phase 9**: Advanced features (pagination, filtering, AI integration)
 
 See [ACTION_PLAN.md](./ACTION_PLAN.md) for detailed learning goals.
 

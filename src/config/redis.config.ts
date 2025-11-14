@@ -6,10 +6,23 @@ const redisConfig = {
     port: parseInt(process.env.REDIS_PORT || "6379"),
     password: process.env.REDIS_PASSWORD || undefined,
     retryStrategy: (times: number) => {
-        const delay = Math.min(times * 50, 2000);
+        // Limit connection retries to 5 attempts (fail fast)
+        const MAX_RETRIES = 5;
+        if (times > MAX_RETRIES) {
+            // Stop retrying after max attempts
+            console.error(
+                `❌ Redis connection failed after ${MAX_RETRIES} attempts`
+            );
+            return null; // Stop retrying
+        }
+        // Exponential backoff: 100ms, 200ms, 400ms, 800ms, 1600ms
+        const delay = Math.min(times * 100, 2000);
         return delay;
     },
     maxRetriesPerRequest: 3,
+    // Fail fast on connection timeout
+    connectTimeout: 10000, // 10 seconds
+    lazyConnect: false, // Connect immediately on creation
 };
 
 // Create the client

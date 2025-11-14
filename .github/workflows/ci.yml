@@ -11,6 +11,18 @@ jobs:
         name: Run Tests
         runs-on: ubuntu-latest
 
+        # Service containers for integration tests
+        services:
+            redis:
+                image: redis:7-alpine
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd "redis-cli ping"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
         strategy:
             matrix:
                 node-version: [18.x, 20.x]
@@ -41,9 +53,16 @@ jobs:
               env:
                   JWT_SECRET: ${{ secrets.JWT_SECRET || 'test-secret-key' }}
                   MONGO_URI: mongodb://localhost:27017/test-db
+                  REDIS_HOST: localhost
+                  REDIS_PORT: 6379
 
             - name: Generate coverage report
               run: npm test -- --coverage --watchAll=false
+              env:
+                  JWT_SECRET: ${{ secrets.JWT_SECRET || 'test-secret-key' }}
+                  MONGO_URI: mongodb://localhost:27017/test-db
+                  REDIS_HOST: localhost
+                  REDIS_PORT: 6379
 
             - name: Upload coverage to Codecov
               uses: codecov/codecov-action@v3

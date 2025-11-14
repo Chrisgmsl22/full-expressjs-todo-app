@@ -3,6 +3,24 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 let mongoServer: MongoMemoryServer;
 
+// Check if Redis is available (for integration tests)
+export const checkRedisConnection = async (): Promise<boolean> => {
+    try {
+        const { redisClient } = await import("../config/redis.config");
+
+        // Skip check for mock Redis (unit tests)
+        if ("__clearMockStore" in redisClient) {
+            return true;
+        }
+
+        // For real Redis, ping to check connection
+        await redisClient.ping();
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 // Connect this memory server before all tests run
 export const connectTestDB = async () => {
     process.env.JWT_SECRET = "test-secret-key-for-testing";
@@ -11,6 +29,23 @@ export const connectTestDB = async () => {
 
     await mongoose.connect(mongoUri);
     console.log("Database connected!");
+
+    // For integration tests, verify Redis is available
+    const isIntegrationTest =
+        process.env.TEST_TYPE === "integration" ||
+        process.argv.some((arg) => arg.includes("integration"));
+
+    if (isIntegrationTest) {
+        const redisAvailable = await checkRedisConnection();
+        if (!redisAvailable) {
+            throw new Error(
+                "❌ Redis is not available! Integration tests require Redis.\n" +
+                    "   Run: docker-compose up -d redis\n" +
+                    "   Or:  make dev"
+            );
+        }
+        console.log("Redis connection verified!");
+    }
 };
 
 // Clear database AND Redis cache between tests
