@@ -33,7 +33,7 @@ taskRoutes.get(
 taskRoutes.post(
     "/tasks",
     authenticateJWT,
-    invalidateCache("task:list"), // Invalidate cache on every post, to always get fresh data
+    invalidateCache("tasks:list"), // Invalidate cache on every post, to always get fresh data
     TaskController.createTask
 );
 
@@ -42,7 +42,7 @@ taskRoutes.patch(
     "/tasks/:id",
     authenticateJWT,
     invalidateCache("tasks:list"),
-    invalidateCache("task:detail"),
+    invalidateCache("tasks:detail"),
     TaskController.updateTask
 );
 
@@ -51,7 +51,7 @@ taskRoutes.delete(
     "/tasks/:id",
     authenticateJWT,
     invalidateCache("tasks:list"),
-    invalidateCache("task:detail"),
+    invalidateCache("tasks:detail"),
     TaskController.deleteTask
 );
 

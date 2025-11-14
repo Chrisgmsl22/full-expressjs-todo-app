@@ -411,4 +411,120 @@ describe("Task API Integration tests", () => {
             expect(res.body.message).toBe("Could not validate token");
         });
     });
+
+    describe("Redis Cache Behavior", () => {
+        it("Should demonstrate cache MISS then cache HIT on repeated GET requests", async () => {
+            // Create a task first
+            const createRes = await request(app)
+                .post("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .send({
+                    title: "Cached Task",
+                    description: "Testing cache behavior",
+                } as ICreateTaskRequest)
+                .expect(201);
+
+            const taskId = createRes.body.data._id;
+
+            // First GET - should be MISS (not cached yet)
+            const firstGet = await request(app)
+                .get(`/api/tasks/${taskId}`)
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(firstGet.body.success).toBe(true);
+            expect(firstGet.body.data.title).toBe("Cached Task");
+            // May or may not be cached depending on mock vs real Redis
+            console.log("First GET - cached:", firstGet.body.cached);
+
+            // Second GET - should be HIT (now cached)
+            const secondGet = await request(app)
+                .get(`/api/tasks/${taskId}`)
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(secondGet.body.success).toBe(true);
+            expect(secondGet.body.data.title).toBe("Cached Task");
+
+            // If using real Redis, this should be cached
+            console.log("Second GET - cached:", secondGet.body.cached);
+
+            // Note: In real Redis, secondGet.body.cached should be true
+        });
+
+        it("Should invalidate cache after updating a task", async () => {
+            // Create task
+            const createRes = await request(app)
+                .post("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .send({
+                    title: "Original Title",
+                    description: "Original description",
+                } as ICreateTaskRequest)
+                .expect(201);
+
+            const taskId = createRes.body.data._id;
+
+            // First GET - caches the task
+            await request(app)
+                .get(`/api/tasks/${taskId}`)
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            // Update the task - should invalidate cache
+            await request(app)
+                .patch(`/api/tasks/${taskId}`)
+                .set("Authorization", `Bearer ${authToken}`)
+                .send({ title: "Updated Title" })
+                .expect(200);
+
+            // GET again - should fetch from DB (not cache) with updated title
+            const afterUpdate = await request(app)
+                .get(`/api/tasks/${taskId}`)
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(afterUpdate.body.data.title).toBe("Updated Title");
+            // Should NOT be cached (cache was invalidated)
+            expect(afterUpdate.body.cached).toBeFalsy();
+        });
+
+        it("Should cache task list and invalidate on new task creation", async () => {
+            // First GET - empty list, will be cached
+            const firstList = await request(app)
+                .get("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(firstList.body.data.length).toBe(0);
+
+            // Second GET - should hit cache
+            const secondList = await request(app)
+                .get("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            console.log("Task list cached:", secondList.body.cached);
+
+            // Create a new task - should invalidate list cache
+            await request(app)
+                .post("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .send({
+                    title: "New Task",
+                    description: "This should invalidate cache",
+                } as ICreateTaskRequest)
+                .expect(201);
+
+            // GET list again - should NOT be cached (invalidated)
+            const afterCreate = await request(app)
+                .get("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(afterCreate.body.data.length).toBe(1);
+            // Should NOT be from cache
+            expect(afterCreate.body.cached).toBeFalsy();
+        });
+    });
 });

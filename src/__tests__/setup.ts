@@ -13,11 +13,35 @@ export const connectTestDB = async () => {
     console.log("Database connected!");
 };
 
-// Clear database between tests
+// Clear database AND Redis cache between tests
 export const clearTestDB = async () => {
     const collections = mongoose.connection.collections;
     for (const key in collections) {
         await collections[key].deleteMany({});
+    }
+
+    // Clear Redis cache (works for both mock and real Redis)
+    try {
+        const { redisClient } = await import("../config/redis.config");
+
+        // If it's the mock, clear the mock store
+        if ("__clearMockStore" in redisClient) {
+            // Type assertion for mock client with custom method
+            (
+                redisClient as typeof redisClient & {
+                    __clearMockStore: () => void;
+                }
+            ).__clearMockStore();
+        } else {
+            // If it's real Redis, flush all keys matching our pattern
+            const keys = await redisClient.keys("*");
+            if (keys.length > 0) {
+                await redisClient.del(...keys);
+            }
+        }
+    } catch (error) {
+        // Silently fail if Redis is not available (unit tests without Redis)
+        console.warn("Could not clear Redis cache:", error);
     }
 };
 

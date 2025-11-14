@@ -337,99 +337,64 @@ describe("invalidateCache", () => {
     });
 
     describe("Cache invalidation scenarios", () => {
-        it("Should invalidate cache on successful response", async () => {
+        it("Should invalidate cache BEFORE controller runs", async () => {
             const middleware = invalidateCache("tasks");
-            const responseData = {
-                success: true,
-                data: { id: "1", title: "Created Task" },
-            };
 
             (RedisHelper.delPattern as jest.Mock).mockResolvedValue(undefined);
 
             await middleware(mockReq as Request, mockRes as Response, mockNext);
 
-            // Simulate controller calling res.json()
-            const interceptedJson = mockRes.json as jest.Mock;
-            interceptedJson(responseData);
-
-            await new Promise(process.nextTick);
-
+            // Should delete with wildcard pattern
             expect(RedisHelper.delPattern).toHaveBeenCalledWith(
-                "tasks:user-123"
+                "tasks:user-123*"
             );
+            // Should call next() to continue to controller
+            expect(mockNext).toHaveBeenCalledTimes(1);
         });
 
         it("Should use anonymous userId when user is not authenticated", async () => {
             const middleware = invalidateCache("tasks");
-            const responseData = {
-                success: true,
-                data: { message: "Public task created" },
-            };
 
             mockReq.user = undefined;
             (RedisHelper.delPattern as jest.Mock).mockResolvedValue(undefined);
 
             await middleware(mockReq as Request, mockRes as Response, mockNext);
 
-            // Simulate controller calling res.json()
-            const interceptedJson = mockRes.json as jest.Mock;
-            interceptedJson(responseData);
-
-            await new Promise(process.nextTick);
-
             expect(RedisHelper.delPattern).toHaveBeenCalledWith(
-                "tasks:anonymous"
+                "tasks:anonymous*"
             );
+            expect(mockNext).toHaveBeenCalledTimes(1);
         });
 
-        it("Should NOT invalidate cache on unsuccessful response", async () => {
+        it("Should invalidate regardless of operation result", async () => {
             const middleware = invalidateCache("tasks");
-            const responseData = {
-                success: false,
-                message: "Failed to create task",
-            };
-
-            await middleware(mockReq as Request, mockRes as Response, mockNext);
-
-            // Simulate controller calling res.json()
-            const interceptedJson = mockRes.json as jest.Mock;
-            interceptedJson(responseData);
-
-            await new Promise(process.nextTick);
-
-            expect(RedisHelper.delPattern).not.toHaveBeenCalled();
-        });
-
-        it("Should generate correct cache pattern for different resources", async () => {
-            const middleware = invalidateCache("users");
-            const responseData = {
-                success: true,
-                data: { id: "1", name: "User" },
-            };
 
             (RedisHelper.delPattern as jest.Mock).mockResolvedValue(undefined);
 
             await middleware(mockReq as Request, mockRes as Response, mockNext);
 
-            // Simulate controller calling res.json()
-            const interceptedJson = mockRes.json as jest.Mock;
-            interceptedJson(responseData);
+            // Cache is deleted BEFORE operation, not after
+            expect(RedisHelper.delPattern).toHaveBeenCalledTimes(1);
+            expect(mockNext).toHaveBeenCalledTimes(1);
+        });
 
-            await new Promise(process.nextTick);
+        it("Should generate correct cache pattern for different resources", async () => {
+            const middleware = invalidateCache("users");
+
+            (RedisHelper.delPattern as jest.Mock).mockResolvedValue(undefined);
+
+            await middleware(mockReq as Request, mockRes as Response, mockNext);
 
             expect(RedisHelper.delPattern).toHaveBeenCalledWith(
-                "users:user-123"
+                "users:user-123*"
             );
+            expect(mockNext).toHaveBeenCalledTimes(1);
         });
     });
 
     describe("Error handling", () => {
         it("Should handle cache invalidation errors gracefully", async () => {
             const middleware = invalidateCache("tasks");
-            const responseData = {
-                success: true,
-                data: { id: "1", title: "Task" },
-            };
             const consoleErrorSpy = jest
                 .spyOn(console, "error")
                 .mockImplementation();
@@ -440,35 +405,33 @@ describe("invalidateCache", () => {
 
             await middleware(mockReq as Request, mockRes as Response, mockNext);
 
-            // Simulate controller response
-            const interceptedJson = mockRes.json as jest.Mock;
-            interceptedJson(responseData);
-
-            await new Promise(process.nextTick);
-
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                "Cache invalidation error: ",
+                "Cache invalidation error:",
                 expect.any(Error)
             );
+            // Should still call next() even if cache deletion fails
+            expect(mockNext).toHaveBeenCalledTimes(1);
 
             consoleErrorSpy.mockRestore();
         });
 
-        it("Should call next() when middleware setup throws an error", async () => {
+        it("Should call next() even when errors occur", async () => {
             const middleware = invalidateCache("tasks");
             const consoleErrorSpy = jest
                 .spyOn(console, "error")
                 .mockImplementation();
 
-            // Force an error by making res.json.bind throw
-            mockRes.json = undefined as any;
+            (RedisHelper.delPattern as jest.Mock).mockRejectedValue(
+                new Error("Redis connection failed")
+            );
 
             await middleware(mockReq as Request, mockRes as Response, mockNext);
 
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                "Cache validation error",
+                "Cache invalidation error:",
                 expect.any(Error)
             );
+            // Request should continue even if cache fails
             expect(mockNext).toHaveBeenCalledTimes(1);
 
             consoleErrorSpy.mockRestore();

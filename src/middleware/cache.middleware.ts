@@ -60,28 +60,23 @@ export const cacheMiddleware = (keyPrefix: string, ttl = 300) => {
     };
 };
 
-// Invalidate cache middleware - clears cache after mutations
-// Example: If we create a new task, then we need to delete the "allTasks" previously stored, because its old data now
+// Invalidate cache middleware - clears cache BEFORE mutations
+// Example: If we create a new task, clear the cache first so subsequent reads get fresh data
 export const invalidateCache = (pattern: string) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = req.user?.id || "anonymous";
-            const cachePattern = `${pattern}:${userId}`;
+            const cachePattern = `${pattern}:${userId}*`; // Add wildcard to match all keys with this prefix
 
-            // Store original json
-            const originalJson = res.json.bind(res);
+            // Delete cache BEFORE the operation (not after)
+            await RedisHelper.delPattern(cachePattern);
+            console.info(`Cache invalidated: ${cachePattern}`);
 
-            // Override to invalidate cache after successfull response
-            res.json = (data: IApiResponse) => {
-                if (data.success) {
-                    RedisHelper.delPattern(cachePattern).catch((err) => {
-                        console.error("Cache invalidation error: ", err);
-                    });
-                }
-                return originalJson(data);
-            };
+            // IMPORTANT: Continue to the next middleware/controller
+            next();
         } catch (err) {
-            console.error("Cache validation error", err);
+            console.error("Cache invalidation error:", err);
+            // Continue even if cache deletion fails (don't break the request)
             next();
         }
     };
