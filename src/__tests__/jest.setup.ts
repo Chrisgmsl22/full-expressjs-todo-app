@@ -5,17 +5,18 @@
  * Strategy:
  * - Unit tests: Mock Redis (fast, no dependencies)
  * - Integration tests: Real Redis from Docker (realistic, slower)
+ * - CI/CD: USE_REAL_REDIS=true forces real Redis (service container available)
  */
 
 // Detect test type from file path or environment variable
 const testFilePath = process.argv.join(" ");
-const isIntegrationTest =
-    testFilePath.includes("integration") ||
-    process.env.TEST_TYPE === "integration" ||
-    process.env.USE_REAL_REDIS === "true";
+const useRealRedis =
+    process.env.USE_REAL_REDIS === "true" || // CI/CD: explicit flag
+    process.env.TEST_TYPE === "integration" || // npm run test:integration
+    testFilePath.includes("integration"); // Running integration test files
 
-if (!isIntegrationTest) {
-    // ✅ UNIT TESTS: Mock Redis
+if (!useRealRedis) {
+    // UNIT TESTS: Mock Redis
     jest.mock("../config/redis.config", () => {
         const { mockRedisClient, MockRedisHelper } = jest.requireActual(
             "../__tests__/mocks/redis.mock"
@@ -26,14 +27,14 @@ if (!isIntegrationTest) {
             RedisHelper: MockRedisHelper,
         };
     });
-    console.log("🧪 [UNIT TEST MODE] Using MOCK Redis");
 } else {
-    // ✅ INTEGRATION TESTS: Real Redis
-    console.log("🐳 [INTEGRATION TEST MODE] Using REAL Redis (localhost:6379)");
-    console.log(
-        "   ⚠️  Make sure Redis is running: docker-compose up redis -d"
-    );
+    // INTEGRATION TESTS: Real Redis
+    if (!process.env.CI) {
+        console.log(
+            "   ⚠️  Make sure Redis is running: docker-compose up redis -d"
+        );
+    }
 }
 
 // Set timeout based on test type
-jest.setTimeout(isIntegrationTest ? 30000 : 10000);
+jest.setTimeout(useRealRedis ? 30000 : 10000);
