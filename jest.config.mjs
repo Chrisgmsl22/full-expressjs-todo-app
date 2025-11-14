@@ -8,6 +8,10 @@ export default {
     collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts", "!src/index.ts"],
     coverageDirectory: "coverage",
     verbose: true,
+    // Setup file to run before tests (mocks Redis, sets timeouts)
+    setupFilesAfterEnv: ["<rootDir>/src/__tests__/jest.setup.ts"],
+    // Increase timeout for integration tests
+    testTimeout: 10000,
 };
 
 /**

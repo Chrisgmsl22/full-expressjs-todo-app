@@ -2,6 +2,16 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils";
 import { IAuthResponse } from "../types";
 
+/**
+ *
+ * @param err Error code
+ * @param _req Request obj, not used
+ * @param res Response, will call status and json
+ * @param _next Not needed
+ *
+ * If your middleware function has exactly 4 parameters, Express treats it as an error handler. If it has 3 (or fewer), it's a regular middleware.
+ */
+
 //? In order to have an actual next() middleware handler, we need to define this function with EXACTLY 4 params
 // error, request, response and next()
 export const errorHandler = (
