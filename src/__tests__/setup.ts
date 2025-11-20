@@ -82,6 +82,21 @@ export const clearTestDB = async () => {
 
 // Disconnect after all tests have run
 export const disconnectTestDB = async () => {
+    // Close Redis connection (both mock and real)
+    try {
+        const { redisClient } = await import("../config/redis.config");
+
+        // Real Redis needs to be disconnected
+        if (!("__clearMockStore" in redisClient)) {
+            await redisClient.quit();
+            console.log("Redis disconnected!");
+        }
+    } catch (error) {
+        // Ignore if Redis was never connected
+        console.warn("Could not disconnect Redis:", error);
+    }
+
+    // Close MongoDB connections
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
     await mongoServer.stop();

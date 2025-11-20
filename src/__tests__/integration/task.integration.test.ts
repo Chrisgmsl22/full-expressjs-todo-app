@@ -2,6 +2,7 @@ import {
     ICreateTaskRequest,
     ILoginRequest,
     IRegisterRequest,
+    ITask,
 } from "../../types";
 import { generateExpiredToken } from "../../utils";
 import { clearTestDB, connectTestDB, disconnectTestDB } from "../setup";
@@ -55,10 +56,14 @@ describe("Task API Integration tests", () => {
                 .get("/api/tasks")
                 .set("Authorization", `Bearer ${authToken}`)
                 .expect(200);
-
+            const expectedPosts = [] as ITask[];
+            const currPage = res.body.pagination.currentPage;
+            const totalPages = res.body.pagination.totalPages;
             expect(res.body.success).toBe(true);
-            expect(res.body.data).toEqual([]);
-            expect(res.body.message).toBe("Tasks retrieved successfully");
+            expect(res.body.data).toEqual(expectedPosts);
+            expect(res.body.message).toBe(
+                `Retrieved ${expectedPosts.length} tasks (page ${currPage} of ${totalPages})`
+            );
         });
 
         it("Should reject request without an auth token", async () => {
@@ -129,13 +134,18 @@ describe("Task API Integration tests", () => {
                 .set("Authorization", `Bearer ${authToken}`)
                 .expect(200);
 
+            const currPage = res.body.pagination.currentPage;
+            const totalPages = res.body.pagination.totalPages;
+
             expect(res.body.success).toBe(true);
-            expect(res.body.message).toBe("Tasks retrieved successfully");
+            expect(res.body.message).toBe(
+                `Retrieved ${res.body.data.length} tasks (page ${currPage} of ${totalPages})`
+            );
             expect(res.body.data).toBeDefined();
             expect(res.body.data).toHaveLength(3);
-            expect(res.body.data[0].title).toBe("Task 1");
+            expect(res.body.data[2].title).toBe("Task 1"); // Mongo will return these fields sorted, so the first one will be the last one
             expect(res.body.data[1].title).toBe("Task 2");
-            expect(res.body.data[2].title).toBe("Task 3");
+            expect(res.body.data[0].title).toBe("Task 3");
         });
     });
 
@@ -525,6 +535,104 @@ describe("Task API Integration tests", () => {
             expect(afterCreate.body.data.length).toBe(1);
             // Should NOT be from cache
             expect(afterCreate.body.cached).toBeFalsy();
+        });
+    });
+
+    describe("Pagination", () => {
+        beforeEach(async () => {
+            // Create 25 tasks for pagination testing
+            const taskPromises = Array.from({ length: 25 }, (_, i) =>
+                request(app)
+                    .post("/api/tasks")
+                    .set("Authorization", `Bearer ${authToken}`)
+                    .send({
+                        title: `Task ${i + 1}`,
+                        description: `Description for task ${i + 1}`,
+                    })
+            );
+            await Promise.all(taskPromises);
+        });
+
+        it("Should return first page with default limit (10)", async () => {
+            const res = await request(app)
+                .get("/api/tasks")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveLength(10);
+            expect(res.body.pagination).toEqual({
+                currentPage: 1,
+                totalPages: 3,
+                totalItems: 25,
+                itemsPerPage: 10,
+                hasNextPage: true,
+                hasPreviousPage: false,
+            });
+        });
+
+        it("Should return second page with correct items", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=2&limit=10")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.data).toHaveLength(10);
+            expect(res.body.pagination.currentPage).toBe(2);
+            expect(res.body.pagination.hasNextPage).toBe(true);
+            expect(res.body.pagination.hasPreviousPage).toBe(true);
+        });
+
+        it("Should return last page with remaining items", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=3&limit=10")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.data).toHaveLength(5); // Only 5 items on last page
+            expect(res.body.pagination.hasNextPage).toBe(false);
+            expect(res.body.pagination.hasPreviousPage).toBe(true);
+        });
+
+        it("Should handle custom page size", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=1&limit=5")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.data).toHaveLength(5);
+            expect(res.body.pagination.totalPages).toBe(5);
+            expect(res.body.pagination.itemsPerPage).toBe(5);
+        });
+
+        it("Should return empty array for page beyond available data", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=999&limit=10")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.data).toHaveLength(0);
+            expect(res.body.pagination.currentPage).toBe(999);
+        });
+
+        it("Should sanitize invalid pagination params", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=-1&limit=0")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            // Should use default values
+            expect(res.body.pagination.currentPage).toBe(1);
+            expect(res.body.pagination.itemsPerPage).toBe(10);
+        });
+
+        it("Should cap limit at MAX_LIMIT (100)", async () => {
+            const res = await request(app)
+                .get("/api/tasks?page=1&limit=999")
+                .set("Authorization", `Bearer ${authToken}`)
+                .expect(200);
+
+            expect(res.body.pagination.itemsPerPage).toBe(100);
         });
     });
 });
