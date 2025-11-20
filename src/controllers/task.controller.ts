@@ -1,8 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { IApiResponse } from "../types";
+import { IApiResponse, IPaginatedResponse, ITask } from "../types";
 import { TaskService } from "../services/task.service";
+import {
+    calculatePaginationMetadata,
+    validatePaginationParams,
+} from "../utils";
 
 export class TaskController {
+    // Will now use pagination
     public static async getAllTasks(
         req: Request,
         res: Response,
@@ -11,14 +16,35 @@ export class TaskController {
         try {
             // 1. Call service to get all tasks
             const userId = req.user!.id; // This will be from the authenticated token
-            const tasks = await TaskService.getAllTasks(userId);
 
-            // 2. Return formatted response
-            res.status(200).json({
+            // Extract and validate pagination params
+            const { page, limit } = validatePaginationParams(
+                Number(req.query.page),
+                Number(req.query.limit)
+            );
+
+            // Get paginated tasks and total count
+            const { tasks, total } = await TaskService.getAllTasksPaginated(
+                userId,
+                page,
+                limit
+            );
+
+            // Calculate pagination metadata
+            const pagination = calculatePaginationMetadata(
+                page!, // These will always have a value
+                limit!,
+                total
+            );
+
+            const response: IPaginatedResponse<ITask> = {
                 success: true,
                 data: tasks,
-                message: "Tasks retrieved successfully",
-            } as IApiResponse);
+                pagination,
+                message: `Retrieved ${tasks.length} tasks (page ${page} of ${pagination.totalPages})`,
+            };
+            // 2. Return formatted response
+            res.status(200).json(response);
         } catch (err) {
             next(err);
         }

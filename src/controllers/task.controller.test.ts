@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { generateStaticPosts } from "../utils";
 import { TaskService } from "../services/task.service";
 import { TaskController } from "./task.controller";
-import { IApiResponse, ITask, IUser } from "../types";
+import { IApiResponse, ITask, ITasksPaginatedResult, IUser } from "../types";
 import mongoose from "mongoose";
 
 // We need to Mock the TaskService
@@ -45,11 +45,20 @@ describe("TaskController", () => {
     });
 
     describe("getAllTasks", () => {
-        it("Should return all tasks with 200 status", async () => {
+        it("Should return all tasks with 200 status (default pagination)", async () => {
             const mockTasks = generateStaticPosts();
+            const mockResolvedValue = {
+                tasks: mockTasks,
+                total: mockTasks.length,
+            } as ITasksPaginatedResult;
+
+            // Set up query params (empty for defaults)
+            mockReq.query = {};
 
             // Mock the service method
-            (TaskService.getAllTasks as jest.Mock).mockResolvedValue(mockTasks);
+            (TaskService.getAllTasksPaginated as jest.Mock).mockResolvedValue(
+                mockResolvedValue
+            );
 
             await TaskController.getAllTasks(
                 mockReq as Request,
@@ -57,18 +66,78 @@ describe("TaskController", () => {
                 mockNext as NextFunction
             );
 
-            expect(TaskService.getAllTasks).toHaveBeenCalledTimes(1);
+            expect(TaskService.getAllTasksPaginated).toHaveBeenCalledTimes(1);
+            expect(TaskService.getAllTasksPaginated).toHaveBeenCalledWith(
+                mockUser.id,
+                1, // default page
+                10 // default limit
+            );
             expect(statusMock).toHaveBeenCalledWith(200);
             expect(jsonMock).toHaveBeenCalledWith({
                 success: true,
                 data: mockTasks,
-                message: "Tasks retrieved successfully",
+                pagination: {
+                    currentPage: 1,
+                    totalPages: Math.ceil(mockTasks.length / 10),
+                    totalItems: mockTasks.length,
+                    itemsPerPage: 10,
+                    hasNextPage: mockTasks.length > 10,
+                    hasPreviousPage: false,
+                },
+                message: `Retrieved ${mockTasks.length} tasks (page 1 of ${Math.ceil(mockTasks.length / 10)})`,
+            });
+        });
+
+        it("Should return tasks with custom pagination params", async () => {
+            const mockTasks = generateStaticPosts().slice(0, 5); // 5 tasks
+            const mockResolvedValue = {
+                tasks: mockTasks,
+                total: 25, // Total in DB
+            } as ITasksPaginatedResult;
+
+            // Set up custom query params
+            mockReq.query = { page: "3", limit: "5" };
+
+            (TaskService.getAllTasksPaginated as jest.Mock).mockResolvedValue(
+                mockResolvedValue
+            );
+
+            await TaskController.getAllTasks(
+                mockReq as Request,
+                mockRes as Response,
+                mockNext as NextFunction
+            );
+
+            expect(TaskService.getAllTasksPaginated).toHaveBeenCalledWith(
+                mockUser.id,
+                3, // page 3
+                5 // limit 5
+            );
+            expect(statusMock).toHaveBeenCalledWith(200);
+            expect(jsonMock).toHaveBeenCalledWith({
+                success: true,
+                data: mockTasks,
+                pagination: {
+                    currentPage: 3,
+                    totalPages: 5, // 25 total / 5 per page
+                    totalItems: 25,
+                    itemsPerPage: 5,
+                    hasNextPage: true,
+                    hasPreviousPage: true,
+                },
+                message: "Retrieved 5 tasks (page 3 of 5)",
             });
         });
 
         it("Should call next() with error if service throws one", async () => {
             const mockError = new Error("Database error");
-            (TaskService.getAllTasks as jest.Mock).mockRejectedValue(mockError);
+
+            // Set up query params
+            mockReq.query = {};
+
+            (TaskService.getAllTasksPaginated as jest.Mock).mockRejectedValue(
+                mockError
+            );
 
             await TaskController.getAllTasks(
                 mockReq as Request,

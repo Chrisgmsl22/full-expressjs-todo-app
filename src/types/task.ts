@@ -20,3 +20,8 @@ export interface IUpdateTaskRequest {
     description?: string;
     completed?: boolean;
 }
+
+export interface ITasksPaginatedResult {
+    tasks: ITask[];
+    total: number;
+}

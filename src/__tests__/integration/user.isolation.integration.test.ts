@@ -106,8 +106,14 @@ describe("User Isolation & Authorization", () => {
                 .set("Authorization", `Bearer ${userAToken}`)
                 .expect(200);
 
+            const tasks = res.body.data;
+            const currPage = res.body.pagination.currentPage;
+            const totalPages = res.body.pagination.totalPages;
+
             expect(res.body.success).toBe(true);
-            expect(res.body.message).toBe("Tasks retrieved successfully");
+            expect(res.body.message).toBe(
+                `Retrieved ${tasks.length} tasks (page ${currPage} of ${totalPages})`
+            );
             expect(res.body.data).toHaveLength(1);
 
             expect(res.body.data[0].title).not.toBe("User B's Private Task");
@@ -127,7 +133,7 @@ describe("User Isolation & Authorization", () => {
                 .expect(200);
 
             expect(res.body.success).toBe(true);
-            expect(res.body.message).toBe("Tasks retrieved successfully");
+            expect(res.body.message).toBe("Retrieved 1 tasks (page 1 of 1)");
             expect(res.body.data).toHaveLength(1); // Even though we have 2 objs in DB, we should only get 1 back
 
             expect(res.body.data[0].title).not.toBe("User A's Private Task");
