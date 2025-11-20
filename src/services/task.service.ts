@@ -1,7 +1,12 @@
-import { ITask, ICreateTaskRequest, IUpdateTaskRequest } from "../types";
+import {
+    ITask,
+    ICreateTaskRequest,
+    IUpdateTaskRequest,
+    ITasksPaginatedResult,
+} from "../types";
 import { Task } from "../models/task.model";
 import mongoose from "mongoose";
-import { ValidationError } from "../utils";
+import { calculateSkip, ValidationError } from "../utils";
 
 export class TaskService {
     public static async getAllTasks(userId: string): Promise<ITask[]> {
@@ -64,5 +69,32 @@ export class TaskService {
         }
 
         return await Task.findOneAndDelete({ _id: id, userId });
+    }
+
+    /**
+     * Get all tasks for a user with pagination
+     * @param userId
+     * @param page Page number (starts at 1)
+     * @param limit Items per page
+     * @returns Paginated tasks and total count
+     */
+    public static async getAllTasksPaginated(
+        userId: string,
+        page: number = 1,
+        limit: number = 10
+    ): Promise<ITasksPaginatedResult> {
+        const skipTask = calculateSkip(page, limit);
+
+        // Run both queries in parallel for better performance
+        const [tasks, total] = await Promise.all([
+            Task.find({ userId })
+                .sort({ createdAt: -1 })
+                .skip(skipTask)
+                .limit(limit)
+                .lean(), // Returns plain JS object (Faster)
+            Task.countDocuments({ userId }), // Count total for pagination metadata
+        ]);
+
+        return { tasks: tasks as ITask[], total };
     }
 }

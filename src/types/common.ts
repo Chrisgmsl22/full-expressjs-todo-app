@@ -23,12 +23,17 @@ export interface IPaginationParams {
     sortOrder?: "asc" | "desc";
 }
 
-export interface IPaginatedResponse<T> {
-    data: T[];
-    pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    };
+export interface IPaginationMetadata {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
 }
+
+// TS generics with interface inheritance
+export interface IPaginatedResponse<T> extends IApiResponse<T[]> {
+    pagination: IPaginationMetadata;
+}
+// <T[]> means: Take the generic type T, make it an array, and pass this array type to IApiResponse
