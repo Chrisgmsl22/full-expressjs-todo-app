@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { checkDatabaseConnection } from "./middleware/checkDatabaseConnection";
 import userRoutes from "./routes/user.routes";
 import { connectDB, redisClient, testDatabaseConnection } from "./config";
+import aiRoutes from "./routes/ai.routes";
 
 // Only load this if we're not in docker
 if (!process.env.DOCKER_ENV) {
@@ -20,6 +21,7 @@ app.use(express.json()); // express.json is a middleware
 // Mount the routes under /api
 app.use("/api", checkDatabaseConnection, taskRoutes);
 app.use("/api", userRoutes);
+app.use("/api", aiRoutes);
 
 // MUST BE LAST
 app.use(errorHandler);
