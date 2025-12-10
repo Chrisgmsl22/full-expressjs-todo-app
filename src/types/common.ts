@@ -37,3 +37,8 @@ export interface IPaginatedResponse<T> extends IApiResponse<T[]> {
     pagination: IPaginationMetadata;
 }
 // <T[]> means: Take the generic type T, make it an array, and pass this array type to IApiResponse
+
+export interface PromptObj {
+    system: string;
+    user: (task: string) => string;
+}
